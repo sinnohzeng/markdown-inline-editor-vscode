@@ -44,8 +44,8 @@ jobs:
         run: npm ci
       - name: Run security audit
         run: npm audit --audit-level=high
-  # The "cd" job runs only when a tag starting with "v" is pushed (i.e., a version tag), because of the conditional below:
-  cd:
+  # The "cd-vsce" job runs only when a tag starting with "v" is pushed (i.e., a version tag), because of the conditional below:
+  cd-vsce:
     # Only runs when the push references a tag that starts with "v" (for example: refs/tags/v1.2.3)
     if: startsWith(github.ref, 'refs/tags/v')
     needs: ci
@@ -69,5 +69,28 @@ jobs:
         run: npm run build
       - name: Publish to Azure DevOps ${{ github.ref }}
         run: npx vsce publish --packagePath dist/extension.vsix --pat ${{ secrets.AZURE_DEVOPS_TOKEN }}
+  # The "cd-ovsx" job runs only when a tag starting with "v" is pushed (i.e., a version tag), because of the conditional below:
+  cd-ovsx:
+    # Only runs when the push references a tag that starts with "v" (for example: refs/tags/v1.2.3)
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CI: true
+    steps:
+      - name: Checkout ${{ github.sha }}
+        uses: actions/checkout@v3
+      - name: Use Node.js with the npmjs.org registry
+        uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+          registry-url: https://registry.npmjs.org/
+      - name: Install dependencies
+        run: npm ci
+      - name: Clean
+        run: npm run clean
+      - name: Build
+        run: npm run build
       - name: Publish to OpenVSX ${{ github.ref }}
         run: npx ovsx publish dist/extension.vsix --pat ${{ secrets.OPENVSX_TOKEN }}
