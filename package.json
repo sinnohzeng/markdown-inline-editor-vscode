@@ -66,8 +66,7 @@
     "bundle": "esbuild src/extension.ts --bundle --platform=node --format=cjs --target=node18 --external:vscode --outfile=dist/extension.js --sourcemap",
     "package": "vsce package --out dist/extension.vsix",
     "build": "npm run compile && npm run bundle && npm run package",
-    "prepublishOnly": "npm run clean && npm run build",
-    "deploy:prod": "npm run clean && npm run build && vsce publish --packagePath dist/extension.vsix --pat $AZURE_DEVOPS_TOKEN"
+    "prepublishOnly": "npm run clean && npm run build"
   },
   "dependencies": {
     "remark-gfm": "^4.0.1",
