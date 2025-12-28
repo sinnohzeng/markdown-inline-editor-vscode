@@ -221,7 +221,7 @@ git commit -m "feat(parser): add definition list support"
 - **Commit format:** `<type>(<scope>): <description>`
   - Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
 - **Testing:** All changes must include tests (123+ existing tests)
-- **Performance:** No regressions – see [`docs/PERFORMANCE_IMPROVEMENTS.md`](docs/PERFORMANCE_IMPROVEMENTS.md)
+- **Performance:** No regressions – see [`docs/PERFORMANCE_IMPROVEMENTS.md`](docs/project/additional-docs/PERFORMANCE_IMPROVEMENTS.md)
 
 ### Feature Requests
 
