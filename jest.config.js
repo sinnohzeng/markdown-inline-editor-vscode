@@ -17,11 +17,12 @@ module.exports = {
     [
       'jest-html-reporters',
       {
-        publicPath: './test-report',
+        publicPath: './dist/test-report',
         filename: 'report.html',
         openReport: false,
         inlineSource: false,
       },
     ],
   ],
+  coverageDirectory: './dist/coverage',
 };
