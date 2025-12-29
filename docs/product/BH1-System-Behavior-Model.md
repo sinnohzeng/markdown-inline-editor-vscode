@@ -180,6 +180,90 @@ graph LR
     B -->|detects & renders| E[LaTeX: Inline or Dialog]
 ```
 
+### Use Case 7: `BH1-UC-007`
+
+- **Name:** Auto-Number Ordered Lists
+- **Actor:** Extension User (`ST1-RBAC-001`)
+- **Description:** User views ordered lists with automatic numbering displayed instead of raw Markdown syntax (`1.`, `2.`, etc.), making lists easier to read and scan
+- **Main Flow:**
+  1. User opens Markdown file containing ordered lists (`1.`, `2.`, `3.`, etc.)
+  2. Extension detects ordered list syntax during parsing
+  3. Extension calculates correct numbering sequence (handles nested lists, gaps in numbering)
+  4. Extension applies decorations to hide raw numbering syntax (`1.`, `2.`, etc.)
+  5. Extension displays auto-generated numbers in correct sequence
+  6. User sees properly numbered list items without syntax markers
+  7. Raw syntax remains editable when selected
+- **Alternative Flows:**
+  - **Alt 1:** If list numbering is non-sequential (e.g., `1.`, `5.`, `10.`), extension preserves original numbering or normalizes to sequential
+  - **Alt 2:** If nested ordered lists exist, extension maintains proper indentation and numbering hierarchy
+   - **Alt 3:** If list items are malformed, extension shows raw syntax for problematic items
+
+**Use Case Diagram:**
+
+```mermaid
+graph LR
+    A[Extension User] -->|views ordered list| UC[Use Case: Auto-Number Lists]
+    UC --> B[Extension System]
+    B -->|detects & calculates| C[Numbering Sequence]
+    B -->|applies decorations| D[Auto-Numbered Display]
+```
+
+### Use Case 8: `BH1-UC-008`
+
+- **Name:** Handle YAML Frontmatter
+- **Actor:** Extension User (`ST1-RBAC-001`)
+- **Description:** User views Markdown files with YAML frontmatter (metadata block at the top) with proper formatting and syntax handling
+- **Main Flow:**
+  1. User opens Markdown file containing YAML frontmatter (delimited by `---` at start and end)
+  2. Extension detects YAML frontmatter block during parsing
+  3. Extension parses YAML frontmatter separately from Markdown content
+  4. Extension applies appropriate formatting/styling to frontmatter (distinct from Markdown)
+  5. Extension hides or formats YAML syntax markers appropriately
+  6. User sees formatted frontmatter metadata clearly separated from Markdown content
+  7. Raw YAML syntax remains editable when selected
+- **Alternative Flows:**
+  - **Alt 1:** If YAML frontmatter is malformed, extension shows raw syntax and continues with Markdown parsing
+  - **Alt 2:** If file has no frontmatter, extension processes normally as standard Markdown
+  - **Alt 3:** If frontmatter delimiters are incomplete, extension treats content as standard Markdown
+
+**Use Case Diagram:**
+
+```mermaid
+graph LR
+    A[Extension User] -->|opens file with frontmatter| UC[Use Case: Handle YAML Frontmatter]
+    UC --> B[Extension System]
+    B -->|detects & parses| C[YAML Metadata]
+    B -->|formats separately| D[Formatted Frontmatter]
+```
+
+### Use Case 9: `BH1-UC-009`
+
+- **Name:** Hide Table Syntax Markers
+- **Actor:** Extension User (`ST1-RBAC-001`)
+- **Description:** User views Markdown tables with syntax markers (pipes `|`, dashes `---`, alignment colons `:`) hidden, showing only formatted table structure
+- **Main Flow:**
+  1. User opens Markdown file containing table syntax (GFM tables with `|` separators)
+  2. Extension detects table syntax during parsing
+  3. Extension identifies table structure (headers, separators, rows, columns)
+  4. Extension applies decorations to hide table syntax markers (`|`, `---`, `:`)
+  5. Extension formats table cells with proper alignment and spacing
+  6. User sees formatted table structure without syntax clutter
+  7. Raw table syntax remains editable when selected
+- **Alternative Flows:**
+  - **Alt 1:** If table syntax is malformed (uneven columns, missing separators), extension shows raw syntax for problematic table
+  - **Alt 2:** If table is very wide, extension may show partial formatting or preserve raw syntax to maintain readability
+  - **Alt 3:** If table contains nested formatting (bold, italic in cells), extension applies both table and text formatting decorations
+
+**Use Case Diagram:**
+
+```mermaid
+graph LR
+    A[Extension User] -->|views table| UC[Use Case: Hide Table Syntax]
+    UC --> B[Extension System]
+    B -->|detects structure| C[Table Parsing]
+    B -->|hides markers| D[Formatted Table Display]
+```
+
 ---
 
 ## Process Flow Diagrams (BPMN)
