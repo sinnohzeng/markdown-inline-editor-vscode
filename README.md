@@ -91,8 +91,12 @@ Currently we support the following features:
 - [x] **Links** – `[text](url)` → Ctrl Clickable, URL hidden
 - [x] **Images** – `![alt](img.png)` → Alt text styled
 - [x] **Unordered Lists** – `- item` or `* item` or `+ item` → • item
-- [x] **Task Lists** – `- [ ]` / `- [x]` → ☐ / ☑
+- [x] **Task Lists** – `- [ ]` / `- [ ]` → ☐ / ☑
   - [x] **Clickable Checkboxes** – Click inside the checkbox to toggle completion status
+  - [x] **Ordered List Task Lists** – `1. [ ] task` / `1) [ ] task` → ☐ / ☑
+  - [x] **Asterisk/Plus Task Lists** – `* [ ] task` / `+ [ ] task` → ☐ / ☑
+  - [x] **Edge Case Handling** – Handles missing spaces and invalid syntax gracefully
+  - [x] **Smart Click Behavior** – Raw markdown only shows when clicking behind checkbox, not on it
 - [x] **Blockquotes** – `> quote` → │ quote (visual bar)
 - [x] **Nested Blockquotes** – `> > nested` → │ │ nested
 - [x] **Horizontal Rules** – `---` or `***` or `___` → ─────── (visual separator)
@@ -108,12 +112,12 @@ We're continuously improving the extension! Here's what's coming next:
 
 ### Critical Priority (Current focus)
 
-- [ ] **Task Lists Enhancement** – Support for task lists in ordered lists, asterisk/plus variants, and edge case handling
-  - [ ] Support task lists in ordered lists (`1. [ ] task`)
-  - [ ] Support task lists with asterisk/plus (`* [ ] task`, `+ [ ] task`)
-  - [ ] Handle edge cases (missing spaces, invalid syntax)
-  - [ ] No Markdown raw view when clicking on the checkbox, only when clicking behind the checkbox
-  - [ ] Bugfix: checkbox in ordered/unordered list should be rendered correctly
+- [x] **Task Lists Enhancement** – Support for task lists in ordered lists, asterisk/plus variants, and edge case handling
+  - [x] Support task lists in ordered lists (`1. [ ] task`)
+  - [x] Support task lists with asterisk/plus (`* [ ] task`, `+ [ ] task`)
+  - [x] Handle edge cases (missing spaces, invalid syntax)
+  - [x] No Markdown raw view when clicking on the checkbox, only when clicking behind the checkbox
+  - [x] Bugfix: checkbox in ordered/unordered list should be rendered correctly
 
 ### High Priority (Must have)
 
@@ -143,14 +147,6 @@ We're continuously improving the extension! Here's what's coming next:
   - [ ] GitHub-style mentions (`@username`)
   - [ ] Issue references (`#123`)
   - [ ] Styling for mentions/references (distinct from regular text)
-- [ ] **Footnotes** – Support for footnote syntax `[^1]` with reference links and footnote definitions
-  - [ ] Footnote syntax detection (`[^1]`)
-  - [ ] Reference links to footnote definitions
-  - [ ] Footnote definition rendering
-  - [ ] Styling for footnotes
-
-### Medium Priority (Extended features)
-
 - [ ] **Mermaid Diagrams** – Hover or maybe inline preview for rendered Mermaid diagrams
   - [ ] Detect Mermaid code blocks (```mermaid)
   - [ ] Hover preview for rendered diagrams
@@ -161,6 +157,9 @@ We're continuously improving the extension! Here's what's coming next:
   - [ ] Hover preview for rendered math
   - [ ] Or inline preview (alternative approach)
   - [ ] Performance optimization
+
+### Medium Priority (Extended features)
+
 - [ ] **HTML Tags** – Detect and style HTML tags within markdown
   - [ ] Detect HTML tags
   - [ ] Style or hide HTML tags
@@ -180,6 +179,11 @@ We're continuously improving the extension! Here's what's coming next:
   - [ ] Per-file toggle state storage
   - [ ] UI for per-file toggle control
   - [ ] State persistence across sessions
+- [ ] **Footnotes** – Support for footnote syntax `[^1]` with reference links and footnote definitions
+  - [ ] Footnote syntax detection (`[^1]`)
+  - [ ] Reference links to footnote definitions
+  - [ ] Footnote definition rendering
+  - [ ] Styling for footnotes
 
 ## Configuration
 

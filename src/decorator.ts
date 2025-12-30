@@ -446,6 +446,7 @@ export class Decorator {
     // Pre-compute selected line ranges for O(1) lookups
     const selectedLines = new Set<number>();
     const selectedRanges: Range[] = [];
+    const cursorPositions: Position[] = [];
 
     for (const selection of this.activeEditor.selections) {
       // Add all lines in the selection to the set
@@ -455,6 +456,9 @@ export class Decorator {
       // Store non-empty selections for precise range intersection checks
       if (!selection.isEmpty) {
         selectedRanges.push(selection);
+      } else {
+        // Store cursor positions for checkbox exclusion check
+        cursorPositions.push(selection.start);
       }
     }
 
@@ -465,13 +469,30 @@ export class Decorator {
       const range = this.createRange(decoration.startPos, decoration.endPos, originalText);
       if (!range) continue;
 
-      // Skip decorations to show raw markdown when:
-      // 1. The decoration range directly intersects with any selection (precise overlap check)
-      // 2. Any line containing the decoration has a selection/cursor (permissive line-based check)
-      //
-      // Note: The line-based check is intentionally permissive - if you click anywhere on a line
-      // that contains a decoration, the decoration is hidden even if your selection doesn't overlap it.
-      // This provides a better UX when editing markdown.
+      // Special handling for checkbox decorations:
+      // - Keep checkbox visible when clicking on it (for toggle functionality)
+      // - Show raw markdown when clicking elsewhere on the line
+      const isCheckbox = decoration.type === 'checkboxChecked' || decoration.type === 'checkboxUnchecked';
+      
+      if (isCheckbox) {
+        // Check if cursor is within the checkbox range - if so, keep it visible
+        const cursorInCheckbox = cursorPositions.some(pos => 
+          pos.line === range.start.line && 
+          pos.character >= range.start.character && 
+          pos.character <= range.end.character
+        );
+        
+        if (cursorInCheckbox) {
+          // Keep checkbox visible when clicking on it
+          const ranges = filtered.get(decoration.type) || [];
+          ranges.push(range);
+          filtered.set(decoration.type, ranges);
+          continue;
+        }
+      }
+      
+      // For all decorations (including checkboxes when cursor is not on them):
+      // Hide to show raw markdown when selection overlaps or cursor is on the line
       if (this.isRangeSelected(range, selectedRanges) || this.isLineOfRangeSelected(range, selectedLines)) {
         continue;
       }
