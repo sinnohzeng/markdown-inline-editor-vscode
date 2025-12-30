@@ -41,14 +41,14 @@ python workflow/scripts/verify-workflow.py --verbose    # Detailed step-by-step 
 **Artifact Validation:**
 ```bash
 # For a single artifact:
-python workflow/scripts/validation/validate-artifact.py workflow/01-PO-Problem-Definition.yaml
-python workflow/scripts/validation/validate-uuids.py workflow/01-PO-Problem-Definition.yaml
-python workflow/scripts/validation/validate-mermaid.py workflow/01-PO-Problem-Definition.yaml
-python workflow/scripts/validation/validate-references.py workflow/01-PO-Problem-Definition.yaml --check-exists
-python workflow/scripts/validation/validate-minimalism.py workflow/01-PO-Problem-Definition.yaml --threshold 10
+python workflow/scripts/validation/validate-artifact.py docs/artifacts/01-PO-Problem-Definition.yaml
+python workflow/scripts/validation/validate-uuids.py docs/artifacts/01-PO-Problem-Definition.yaml
+python workflow/scripts/validation/validate-mermaid.py docs/artifacts/01-PO-Problem-Definition.yaml
+python workflow/scripts/validation/validate-references.py docs/artifacts/01-PO-Problem-Definition.yaml --check-exists
+python workflow/scripts/validation/validate-minimalism.py docs/artifacts/01-PO-Problem-Definition.yaml --threshold 10
 
 # Validate all artifacts:
-for file in workflow/*.yaml; do
+for file in docs/artifacts/*.yaml; do
     python workflow/scripts/validation/validate-artifact.py "$file" &&
     python workflow/scripts/validation/validate-uuids.py "$file" &&
     python workflow/scripts/validation/validate-mermaid.py "$file" &&
@@ -86,9 +86,12 @@ workflow/
 │   ├── base-artifact-schema.json
 │   ├── uuid-schema.json
 │   └── mermaid-schema.json
-└── *.yaml                       # Generated artifact outputs (00-START, 01-PO, 02-ST, etc.)
-workflow/scripts/
-├── validation/                  # Validation scripts (artifact, UUID, Mermaid, references, minimalism)
+└── scripts/                     # Validation and workflow scripts
+    └── validation/              # Validation scripts (artifact, UUID, Mermaid, references, minimalism)
+
+docs/artifacts/                  # Generated artifact outputs (created by workflow)
+├── *.yaml                       # Generated YAML artifacts (00-START, 01-PO, etc.)
+└── *.md                         # Generated diagrams and reports
 ```
 
 ---

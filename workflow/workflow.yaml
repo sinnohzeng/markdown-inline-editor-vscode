@@ -3,6 +3,9 @@ workflow:
   version: "1.0.0"
   description: "Complete workflow from problem definition to stable release with iteration loop"
   
+  # Output Configuration
+  output_dir: "docs/artifacts"  # Directory where all generated artifacts are stored
+  
   # Execution Rules
   execution:
     # How to handle nodes that require human input
@@ -61,7 +64,7 @@ nodes:
     outputs:
       - type: "document"
         format: "yaml"  # YAML format for structured data
-        path: "workflow/00-START-Project-Initiation.yaml"
+        path: "docs/artifacts/00-START-Project-Initiation.yaml"
         template: "workflow/templates/00-START-Project-Initiation.template.yaml"
     done_criteria:
       - "00-START-Project-Initiation.yaml exists and validated"
@@ -90,11 +93,11 @@ nodes:
     outputs:
       - type: "document"
         format: "yaml"  # YAML format for structured data
-        path: "workflow/01-PO-Problem-Definition.yaml"
+        path: "docs/artifacts/01-PO-Problem-Definition.yaml"
         template: "workflow/templates/01-PO-Problem-Definition.template.yaml"
       - type: "diagram"
         format: "markdown"  # Markdown for diagrams only
-        path: "workflow/01-PO-Problem-Definition-diagram.md"
+        path: "docs/artifacts/01-PO-Problem-Definition-diagram.md"
         template: "workflow/templates/diagram.template.md"
         source_field: "current_state_analysis.process_flow.mermaid_diagram"  # Field in YAML to extract diagram from
     done_criteria:
@@ -125,7 +128,7 @@ nodes:
     outputs:
       - type: "document"
         format: "yaml"  # YAML format for structured data
-        path: "workflow/02-ST-Stakeholder-Analysis.yaml"
+        path: "docs/artifacts/02-ST-Stakeholder-Analysis.yaml"
         template: "workflow/templates/02-ST-Stakeholder-Analysis.template.yaml"
     done_criteria:
       - "02-ST-Stakeholder-Analysis.yaml exists and validated"
@@ -154,7 +157,7 @@ nodes:
     outputs:
       - type: "document"
         format: "yaml"  # YAML format for structured data
-        path: "workflow/03-BN-Goals-Success-Criteria.yaml"
+        path: "docs/artifacts/03-BN-Goals-Success-Criteria.yaml"
         template: "workflow/templates/03-BN-Goals-Success-Criteria.template.yaml"
     done_criteria:
       - "03-BN-Goals-Success-Criteria.yaml exists and validated"
@@ -182,7 +185,7 @@ nodes:
     outputs:
       - type: "document"
         format: "yaml"  # YAML format for structured data
-        path: "workflow/04-BH-System-Behavior-Model.yaml"
+        path: "docs/artifacts/04-BH-System-Behavior-Model.yaml"
         template: "workflow/templates/04-BH-System-Behavior-Model.template.yaml"
     done_criteria:
       - "04-BH-System-Behavior-Model.yaml exists and validated"
@@ -211,7 +214,7 @@ nodes:
     outputs:
       - type: "document"
         format: "yaml"  # YAML format for structured data
-        path: "workflow/05-PM-Resource-Planning.yaml"
+        path: "docs/artifacts/05-PM-Resource-Planning.yaml"
         template: "workflow/templates/05-PM-Resource-Planning.template.yaml"
     done_criteria:
       - "05-PM-Resource-Planning.yaml exists and validated"
@@ -239,7 +242,7 @@ nodes:
     outputs:
       - type: "document"
         format: "yaml"  # YAML format for structured data
-        path: "workflow/06-PM-Risk-Assessment.yaml"
+        path: "docs/artifacts/06-PM-Risk-Assessment.yaml"
         template: "workflow/templates/06-PM-Risk-Assessment.template.yaml"
     done_criteria:
       - "06-PM-Risk-Assessment.yaml exists and validated"
@@ -267,7 +270,7 @@ nodes:
     outputs:
       - type: "document"
         format: "yaml"  # YAML format for structured data
-        path: "workflow/07-DM-Data-Model.yaml"
+        path: "docs/artifacts/07-DM-Data-Model.yaml"
         template: "workflow/templates/07-DM-Data-Model.template.yaml"
     done_criteria:
       - "07-DM-Data-Model.yaml exists and validated"
@@ -295,7 +298,7 @@ nodes:
     outputs:
       - type: "document"
         format: "yaml"  # YAML format for structured data
-        path: "workflow/08-DE-Design-Model.yaml"
+        path: "docs/artifacts/08-DE-Design-Model.yaml"
         template: "workflow/templates/08-DE-Design-Model.template.yaml"
     done_criteria:
       - "08-DE-Design-Model.yaml exists and validated"
@@ -324,7 +327,7 @@ nodes:
     outputs:
       - type: "document"
         format: "yaml"  # YAML format for structured data
-        path: "workflow/09-AR-Architecture-Model.yaml"
+        path: "docs/artifacts/09-AR-Architecture-Model.yaml"
         template: "workflow/templates/09-AR-Architecture-Model.template.yaml"
     done_criteria:
       - "09-AR-Architecture-Model.yaml exists and validated"
@@ -352,7 +355,7 @@ nodes:
     outputs:
       - type: "document"
         format: "yaml"  # YAML format for structured data
-        path: "workflow/10-SC-Security-Model.yaml"
+        path: "docs/artifacts/10-SC-Security-Model.yaml"
         template: "workflow/templates/10-SC-Security-Model.template.yaml"
     done_criteria:
       - "10-SC-Security-Model.yaml exists and validated"
@@ -380,7 +383,7 @@ nodes:
     outputs:
       - type: "document"
         format: "yaml"  # YAML format for structured data
-        path: "workflow/11-RD-Requirements-Model.yaml"
+        path: "docs/artifacts/11-RD-Requirements-Model.yaml"
         template: "workflow/templates/11-RD-Requirements-Model.template.yaml"
     done_criteria:
       - "11-RD-Requirements-Model.yaml exists and validated"
@@ -408,7 +411,7 @@ nodes:
     outputs:
       - type: "document"
         format: "yaml"  # YAML format for structured data
-        path: "workflow/12-RD-Release-Planning.yaml"
+        path: "docs/artifacts/12-RD-Release-Planning.yaml"
         template: "workflow/templates/12-RD-Release-Planning.template.yaml"
     done_criteria:
       - "12-RD-Release-Planning.yaml exists and validated"
@@ -468,7 +471,7 @@ nodes:
     outputs:
       - type: "report"
         format: "markdown"  # Markdown with YAML frontmatter for structured metadata + rich content
-        path: "workflow/RELEASE-UAT-Report.md"
+        path: "docs/artifacts/RELEASE-UAT-Report.md"
       - type: "artifact"
         format: "package"
         path: "dist/*.vsix"
@@ -497,7 +500,7 @@ nodes:
     outputs:
       - type: "document"
         format: "markdown"  # Markdown with YAML frontmatter for structured metadata + rich content
-        path: "workflow/BACKLOG-New-Work-Item.md"
+        path: "docs/artifacts/BACKLOG-New-Work-Item.md"
     done_criteria:
       - "Work item documented"
       - "Priority assigned"
