@@ -78,28 +78,108 @@ Press `Ctrl+P` / `Cmd+P`, type `ext install CodeSmith.markdown-inline-editor-vsc
 3. Click/select text to reveal raw Markdown
 4. Use the toolbar button to toggle decorations on/off
 
-## Supported Markdown Features
+## Supported Features
 
-| Syntax | Example | Result |
-|--------|---------|--------|
-| **Bold** | `**text**` | **text** (markers hidden) |
-| **Italic** | `*text*` | *text* (markers hidden) |
-| **Bold + Italic** | `***text***` | ***text*** (markers hidden) |
-| **Strikethrough** | `~~text~~` | ~~text~~ (markers hidden) |
-| **Inline Code** | `` `code` `` | `code` (monospace) |
-| **Headings** | `# H1` ... `###### H6` | Sized text (200% to 80%) |
-| **Links** | `[text](url)` | Clickable, URL hidden |
-| **Images** | `![alt](img.png)` | Alt text styled |
-| **Unordered Lists** | `- item` or `* item` or `+ item` | • item |
-| **Task Lists** | `- [ ]` / `- [x]` | ☐ / ☑ |
-| **Blockquotes** | `> quote` | │ quote (visual bar) |
-| **Nested Blockquotes** | `> > nested` | │ │ nested |
-| **Horizontal Rules** | `---` or `***` or `___` | ─────── (visual separator) |
-| **Code Blocks** | ` ```lang ` | Background styled, fences hidden |
+Currently we support the following features:
+
+- [x] **Bold** – `**text**` → **text** (markers hidden)
+- [x] **Italic** – `*text*` → *text* (markers hidden)
+- [x] **Bold + Italic** – `***text***` → ***text*** (markers hidden)
+- [x] **Strikethrough** – `~~text~~` → ~~text~~ (markers hidden)
+- [x] **Inline Code** – `` `code` `` → `code` (monospace)
+- [x] **Headings** – `# H1` ... `###### H6` → Sized text (200% to 80%)
+- [x] **Links** – `[text](url)` → Ctrl Clickable, URL hidden
+- [x] **Images** – `![alt](img.png)` → Alt text styled
+- [x] **Unordered Lists** – `- item` or `* item` or `+ item` → • item
+- [x] **Task Lists** – `- [ ]` / `- [x]` → ☐ / ☑
+  - [x] **Clickable Checkboxes** – Click inside the checkbox to toggle completion status
+- [x] **Blockquotes** – `> quote` → │ quote (visual bar)
+- [x] **Nested Blockquotes** – `> > nested` → │ │ nested
+- [x] **Horizontal Rules** – `---` or `***` or `___` → ─────── (visual separator)
+- [x] **Code Blocks** – ` ```lang ` → Background styled, fences hidden
 
 **Nested formatting fully supported** (e.g., **bold *italic***, `**bold `code`**`).
 
 **Note:** Ordered lists (`1.`, `2.`, etc.) are currently displayed as-is. Auto-numbering is planned for a future release.
+
+## Upcoming Features
+
+We're continuously improving the extension! Here's what's coming next:
+
+### Critical Priority (Current focus)
+
+- [ ] **Task Lists Enhancement** – Support for task lists in ordered lists, asterisk/plus variants, and edge case handling
+  - [ ] Support task lists in ordered lists (`1. [ ] task`)
+  - [ ] Support task lists with asterisk/plus (`* [ ] task`, `+ [ ] task`)
+  - [ ] Handle edge cases (missing spaces, invalid syntax)
+  - [ ] No Markdown raw view when clicking on the checkbox, only when clicking behind the checkbox
+  - [ ] Bugfix: checkbox in ordered/unordered list should be rendered correctly
+
+### High Priority (Must have)
+
+- [ ] **Tables** – Complete table syntax hiding with cell alignment and multi-line cell support
+  - [ ] Table syntax hiding (hide `|` markers)
+  - [ ] Table cell alignment support (`:---`, `:---:`, `---:`)
+  - [ ] Multi-line cells (with `<br>` tags)
+  - [ ] Inline formatting in cells (bold, italic, code)
+  - [ ] Empty cells handling
+  - [ ] Escaped pipes (`\|`) in cells
+- [ ] **YAML Frontmatter** – Detect, style, and hide frontmatter delimiters
+  - [ ] Detect YAML frontmatter at document start
+  - [ ] Style frontmatter block (background color, distinct appearance)
+  - [ ] Hide frontmatter delimiters (`---`)
+  - [ ] Display as code blocks or at least to some degree as visual distinct
+  - [ ] Support frontmatter editing (reveal on selection)
+- [ ] **Ordered List Auto-Numbering** – Hide markers and show auto-numbered items (1, 2, 3...), including support for nested lists
+  - [ ] Hide list markers (`1.`, `2.`, etc.)
+  - [ ] Show auto-numbered items (1, 2, 3...)
+  - [ ] Handle nested ordered lists
+  - [ ] Support GFM parentheses variant (`1)` vs `1.`)
+  - [ ] Handle out-of-order numbering gracefully
+- [ ] **Autolinks** – Automatic link detection for `<https://...>` URLs and `<email@example.com>` email addresses
+  - [ ] URL autolinks (`<https://...>`)
+  - [ ] Email autolinks (`<email@example.com>`)
+- [ ] **Mentions/References** – GitHub-style `@username` and `#123` references with proper styling
+  - [ ] GitHub-style mentions (`@username`)
+  - [ ] Issue references (`#123`)
+  - [ ] Styling for mentions/references (distinct from regular text)
+- [ ] **Footnotes** – Support for footnote syntax `[^1]` with reference links and footnote definitions
+  - [ ] Footnote syntax detection (`[^1]`)
+  - [ ] Reference links to footnote definitions
+  - [ ] Footnote definition rendering
+  - [ ] Styling for footnotes
+
+### Medium Priority (Extended features)
+
+- [ ] **Mermaid Diagrams** – Hover or maybe inline preview for rendered Mermaid diagrams
+  - [ ] Detect Mermaid code blocks (```mermaid)
+  - [ ] Hover preview for rendered diagrams
+  - [ ] Or inline preview (alternative approach)
+  - [ ] Performance optimization
+- [ ] **LaTeX/Math** – Hover or maybe inline preview for math formulas using KaTeX/MathJax
+  - [ ] Detect inline math (`$...$`) and block math (`$$...$$`)
+  - [ ] Hover preview for rendered math
+  - [ ] Or inline preview (alternative approach)
+  - [ ] Performance optimization
+- [ ] **HTML Tags** – Detect and style HTML tags within markdown
+  - [ ] Detect HTML tags
+  - [ ] Style or hide HTML tags
+  - [ ] Handle nested HTML structures
+
+### Low Priority (Nice-to-Have)
+
+- [ ] **Emoji Support** – Render emoji shortcodes like `:smile:` and `:+1:`
+  - [ ] Emoji shortcode detection (`:smile:`, `:+1:`, `:tada:`)
+  - [ ] Render emoji inline (or show shortcode styled)
+  - [ ] Handle invalid emoji shortcodes gracefully
+- [ ] **Highlighting Support** – Support `==text==` highlighting syntax with background color styling
+  - [ ] Detect highlighting syntax (`==text==`)
+  - [ ] Style highlighted text with background color
+  - [ ] Hide highlighting markers
+- [ ] **Per-File Toggle State** – Enable/disable decorations per file instead of globally
+  - [ ] Per-file toggle state storage
+  - [ ] UI for per-file toggle control
+  - [ ] State persistence across sessions
 
 ## Configuration
 
