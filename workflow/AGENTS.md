@@ -2,14 +2,12 @@
 
 ## 1. Golden Rules (Critical Protocols)
 
-1. **Never skip dependency checks** — Ensure all `dependencies` are `complete` before executing any node.
-2. **Check the human input requirement** — If `requires_human_input: true`, always pause, await user approval, and capture input before proceeding.
+1. **(!) Human Input Check (MANDATORY)** — If `requires_human_input: true`: **STOP immediately**, pause execution, request user input, and **WAIT** for explicit approval. **DO NOT** proceed with template loading, UUID generation, or any activities until input is received.
+2. **Never skip dependency checks** — Ensure all `dependencies` are `complete` before executing any node.
 3. **Always generate UUIDs first** — Sub-item UUIDs must follow `{ARTIFACT_UUID}-{TYPE}-{SEQUENCE:03d}`.
 4. **No duplication, use references** — All cross-node links must be via `{uuid}` fields, never by duplicating content.
 5. **YAML-only for artifacts** — Templates may include type hints, but generated files must exclude Markdown frontmatter or in-file examples.
 6. **Validate before marking complete** — Run all validators: `validate-artifact`, `validate-uuids`, `validate-mermaid`, `validate-references`, and `validate-minimalism`.
-
-**⚠️ When `requires_human_input: true`, execution MUST pause and wait for explicit approval before continuing (see `WORKFLOW-EXECUTION.md`).**
 
 ---
 
@@ -27,15 +25,21 @@ python workflow/scripts/verify-workflow.py --verbose    # Detailed step-by-step 
 #   REQUIRED: Input an initial problem statement/project context before workflow can begin (free text)
 #   Example: "Problem: Users experience X. Context: Y. Goal: Z."
 
-# All nodes:
-# 1. Check all dependencies are 'complete'
-# 2. If requires_human_input: pause and await approval/user input
-# 3. Load template: workflow/templates/{INDEX}-{SHORTNAME}-{Description}.template.yaml
-# 4. Fill using # AI_INSTRUCTION comments (START node uses the provided context for charter)
-# 5. Generate UUIDs for all new sub-items
-# 6. Extract any mermaid_diagram; generate/update diagram.md
-# 7. Run all 5 validators
-# 8. Save artifact; update status to 'complete'
+# All nodes - EXECUTE IN THIS EXACT ORDER:
+# 
+# STEP 1: Check all dependencies are 'complete'
+#   - If any dependency is not complete, STOP and wait
+#
+# STEP 2: Check requires_human_input flag
+#   - IF requires_human_input: true: STOP, request input, WAIT for user response
+#   - IF FALSE or NOT PRESENT: Continue to step 3
+#
+# STEP 3: Load template: workflow/templates/{INDEX}-{SHORTNAME}-{Description}.template.yaml
+# STEP 4: Fill using # AI_INSTRUCTION comments (START node uses the provided context for charter)
+# STEP 5: Generate UUIDs for all new sub-items
+# STEP 6: Extract any mermaid_diagram; generate/update diagram.md
+# STEP 7: Run all 5 validators
+# STEP 8: Save artifact; update status to 'complete'
 ```
 
 **Artifact Validation:**
