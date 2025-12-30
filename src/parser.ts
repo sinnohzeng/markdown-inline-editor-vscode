@@ -729,8 +729,9 @@ export class MarkdownParser {
   /**
    * Processes a list item node.
    *
-   * Replaces list markers (-, *, +) with a bullet point (•).
+   * Replaces list markers (-, *, +, 1., 2., etc.) with a bullet point (•).
    * Detects and decorates checkboxes ([ ] or [x]) after the marker.
+   * Supports both unordered lists (-, *, +) and ordered lists (1., 2., etc.).
    */
   private processListItem(
     node: ListItem,
@@ -743,57 +744,121 @@ export class MarkdownParser {
     const end = node.position!.end.offset!;
 
     // Find the list marker at the start of the list item
-    // Common markers: -, *, +
     let markerEnd = start;
-    while (markerEnd < end && /[\s\-*+]/.test(text[markerEnd])) {
-      if (text[markerEnd] === '-' || text[markerEnd] === '*' || text[markerEnd] === '+') {
-        // Found the marker, now find where it ends (including following space)
-        const markerStart = markerEnd;
+    
+    // Skip leading whitespace
+    while (markerEnd < end && /\s/.test(text[markerEnd])) {
+      markerEnd++;
+    }
+    
+    if (markerEnd >= end) return;
+    
+    const markerStart = markerEnd;
+    
+    // Check for unordered list markers: -, *, +
+    if (text[markerEnd] === '-' || text[markerEnd] === '*' || text[markerEnd] === '+') {
+      markerEnd++;
+      // Skip optional space after marker
+      if (markerEnd < end && text[markerEnd] === ' ') {
         markerEnd++;
-        
-        // Check if there's a space after the marker
+      }
+      
+      // Try to detect and add checkbox, otherwise add regular list item decoration
+      if (this.tryAddCheckboxDecorations(text, markerStart, markerEnd, end, decorations)) {
+        return;
+      }
+      
+      decorations.push({
+        startPos: markerStart,
+        endPos: markerEnd,
+        type: 'listItem',
+      });
+      return;
+    }
+    
+    // Check for ordered list markers: 1., 2., etc. or 1), 2), etc.
+    if (/\d/.test(text[markerEnd])) {
+      // Find the end of the number
+      let numEnd = markerEnd;
+      while (numEnd < end && /\d/.test(text[numEnd])) {
+        numEnd++;
+      }
+      
+      // Check if followed by '.' or ')'
+      if (numEnd < end && (text[numEnd] === '.' || text[numEnd] === ')')) {
+        markerEnd = numEnd + 1;
+        // Skip optional space after marker
         if (markerEnd < end && text[markerEnd] === ' ') {
           markerEnd++;
         }
         
-        // Check for checkbox pattern: [ ] or [x] or [X]
-        // Pattern: "[" + (" " or "x" or "X") + "]"
-        if (markerEnd + 2 < end && text[markerEnd] === '[') {
-          const checkChar = text[markerEnd + 1];
-          if ((checkChar === ' ' || checkChar === 'x' || checkChar === 'X') && text[markerEnd + 2] === ']') {
-            // This is a task list item with checkbox
-            // Replace marker with bullet decoration (includes the space before checkbox)
-            decorations.push({
-              startPos: markerStart,
-              endPos: markerEnd,
-              type: 'listItem',
-            });
-
-            // Determine checkbox type and add decoration
-            // Only include [ ] or [x] (3 chars), not the trailing space
-            const isChecked = checkChar === 'x' || checkChar === 'X';
-            const checkboxEnd = markerEnd + 3; // Just [ ], [x], or [X]
-
-            decorations.push({
-              startPos: markerEnd,
-              endPos: checkboxEnd,
-              type: isChecked ? 'checkboxChecked' : 'checkboxUnchecked',
-            });
-            break;
-          }
+        // Try to detect and add checkbox, otherwise add regular list item decoration
+        if (this.tryAddCheckboxDecorations(text, markerStart, markerEnd, end, decorations)) {
+          return;
         }
-
-        // Not a checkbox - just a regular list item
-        // Replace the marker (and space) with a bullet decoration
+        
         decorations.push({
           startPos: markerStart,
           endPos: markerEnd,
           type: 'listItem',
         });
-        break;
+        return;
       }
-      markerEnd++;
     }
+  }
+
+  /**
+   * Attempts to detect and add checkbox decorations after a list marker.
+   * 
+   * @param text - The full document text
+   * @param markerStart - Start position of the list marker
+   * @param markerEnd - End position after the marker (and optional space)
+   * @param end - End position of the list item
+   * @param decorations - Array to add decorations to
+   * @returns true if checkbox was found and decorations were added, false otherwise
+   */
+  private tryAddCheckboxDecorations(
+    text: string,
+    markerStart: number,
+    markerEnd: number,
+    end: number,
+    decorations: DecorationRange[]
+  ): boolean {
+    // Check for checkbox pattern: [ ] or [x] or [X]
+    // GFM requires a space after the closing bracket for task lists
+    if (markerEnd + 3 >= end || text[markerEnd] !== '[') {
+      return false;
+    }
+    
+    const checkChar = text[markerEnd + 1];
+    if ((checkChar !== ' ' && checkChar !== 'x' && checkChar !== 'X') || text[markerEnd + 2] !== ']') {
+      return false;
+    }
+    
+    // GFM spec requires a space after the closing bracket for task lists
+    // Without a space, it's not a valid task list (e.g., "- [x]task" is not a task list)
+    if (text[markerEnd + 3] !== ' ') {
+      return false;
+    }
+    
+    // Found a valid checkbox - add decorations
+    const checkboxStart = markerEnd;
+    const checkboxEnd = checkboxStart + 3; // [ ], [x], or [X] (space after is not part of checkbox)
+    const isChecked = checkChar === 'x' || checkChar === 'X';
+    
+    decorations.push({
+      startPos: markerStart,
+      endPos: checkboxStart,
+      type: 'listItem',
+    });
+    
+    decorations.push({
+      startPos: checkboxStart,
+      endPos: checkboxEnd,
+      type: isChecked ? 'checkboxChecked' : 'checkboxUnchecked',
+    });
+    
+    return true;
   }
 
   /**
