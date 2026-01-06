@@ -1,7 +1,7 @@
 # Markless Features Summary - Quick Reference
 
-**Extracted from:** [Markless Deep Dive](./markless_deep_dive.md)  
-**Full Details:** [Feature Extraction Document](./FEATURE_EXTRACTION_MARKLESS.md)
+**Extracted from:** [Markless Deep Dive](../markless_deep_dive.md)  
+**Full Details:** [Feature Extraction Document](../FEATURE_EXTRACTION_MARKLESS.md)
 
 ---
 
@@ -108,4 +108,4 @@
 
 ---
 
-**See [FEATURE_EXTRACTION_MARKLESS.md](./FEATURE_EXTRACTION_MARKLESS.md) for complete details.**
+**See [FEATURE_EXTRACTION_MARKLESS.md](../FEATURE_EXTRACTION_MARKLESS.md) for complete details.**
