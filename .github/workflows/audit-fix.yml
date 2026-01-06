@@ -9,7 +9,7 @@ on:
 jobs:
   audit-fix:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions:
       contents: write
       pull-requests: write
@@ -44,6 +44,22 @@ jobs:
             echo "Fixes applied"
           fi
 
+      - name: Reinstall dependencies after audit fix
+        if: steps.audit-fix.outputs.changed == 'true'
+        run: npm ci
+
+      - name: Lint
+        if: steps.audit-fix.outputs.changed == 'true'
+        run: npm run lint --if-present
+
+      - name: Build
+        if: steps.audit-fix.outputs.changed == 'true'
+        run: npm run build --if-present
+
+      - name: Test
+        if: steps.audit-fix.outputs.changed == 'true'
+        run: npm test --if-present
+
       - name: Create Pull Request
         if: steps.audit-fix.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v5
@@ -56,6 +72,9 @@ jobs:
             
             The following changes were made:
             - Updated dependencies to fix security vulnerabilities
+            - ✅ All tests passed
+            - ✅ Lint checks passed
+            - ✅ Build succeeded
             
             Please review and merge if the changes look good.
           branch: chore/automated-audit-fix
