@@ -1,17 +1,23 @@
-# Feature Requests
+# Feature Documentation
 
-This directory contains detailed specifications for all upcoming features, organized by status and priority.
+This directory contains detailed specifications for all features - both implemented and upcoming.
 
 ## Structure
 
 Features are organized into individual markdown files, one per feature. Each file contains:
-- Status (Implement/Reconsider/Remove)
+- Status (Implemented/Implement/Reconsider/Remove)
 - Priority
 - Implementation details
 - Dependencies
 - Notes and concerns
 
 ## Feature Index
+
+### ✅ Implemented Features
+
+See [implemented/README.md](implemented/README.md) for all currently implemented features (13 features).
+
+### 📋 Upcoming Features
 
 ### ✅ Implement / Improve
 
@@ -52,6 +58,7 @@ Features are organized into individual markdown files, one per feature. Each fil
 
 ## Related Documents
 
+- [Implemented Features](implemented/README.md) - All currently implemented features
 - [Feature Implementation Table](../FEATURE_IMPLEMENTATION_TABLE.md) - Comprehensive feature table with all details
 - [Feature Extraction from Markless](../FEATURE_EXTRACTION_MARKLESS.md) - Analysis of markless features
 - [Competitive Analysis](../competitive_analysis.md) - Comparison with other extensions
