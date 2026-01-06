@@ -1,0 +1,65 @@
+name: Automated npm audit fix
+
+on:
+  schedule:
+    # Run weekly on Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  audit-fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Use Node.js LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit fix
+        id: audit-fix
+        run: |
+          # Run audit fix and capture output
+          npm audit fix || true
+          
+          # Check if package-lock.json changed
+          if git diff --quiet package-lock.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No fixes available"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Fixes applied"
+          fi
+
+      - name: Create Pull Request
+        if: steps.audit-fix.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore(deps): fix npm audit vulnerabilities'
+          title: 'chore(deps): Automated npm audit fix'
+          body: |
+            This PR was automatically created by the npm audit fix workflow.
+            
+            The following changes were made:
+            - Updated dependencies to fix security vulnerabilities
+            
+            Please review and merge if the changes look good.
+          branch: chore/automated-audit-fix
+          delete-branch: true
+          labels: |
+            dependencies
+            automated
