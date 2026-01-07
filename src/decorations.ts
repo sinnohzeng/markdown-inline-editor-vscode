@@ -210,13 +210,7 @@ export function HorizontalRuleDecorationType() {
     isWholeLine: true,
     borderWidth: '0 0 2px 0', // Only bottom border, 2px thick
     borderStyle: 'solid',
-    // Theme-specific colors for better contrast
-    light: {
-      borderColor: 'rgba(0, 0, 0, 0.35)',
-    },
-    dark: {
-      borderColor: 'rgba(255, 255, 255, 0.28)',
-    },
+    borderColor: new ThemeColor('editorWidget.border'),
   });
 }
 
