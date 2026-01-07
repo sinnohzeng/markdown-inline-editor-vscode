@@ -208,7 +208,7 @@ export function HorizontalRuleDecorationType() {
   return window.createTextEditorDecorationType({
     textDecoration: 'none; display: none;', // Hide the original text (---, ***, ___)
     isWholeLine: true,
-    borderWidth: '0 0 2px 0', // Only bottom border, 2px thick
+    borderWidth: '0 0 1px 0', // Only bottom border, 1px thick
     borderStyle: 'solid',
     borderColor: new ThemeColor('editorWidget.border'),
   });
