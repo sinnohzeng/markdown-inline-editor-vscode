@@ -121,7 +121,7 @@ function createHeadingDecoration(level: number) {
   
   return window.createTextEditorDecorationType({
     textDecoration: `none; font-size: ${config.size};`,
-    ...(config.bold ? { fontWeight: 'bold' } : { color: new ThemeColor('descriptionForeground') }),
+    ...(config.bold ? { fontWeight: 'bold' } : {}),
   });
 }
 
