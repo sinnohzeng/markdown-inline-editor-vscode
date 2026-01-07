@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2026-01-07
+
+### Fixed
+- Remove explicit color override for H4-H6 headings to respect editor theme
+
 ## [1.5.0] - 2026-01-07
 
 ### Added
@@ -182,7 +187,8 @@ _No changes documented_
   - Task lists (checkboxes)
   - Strikethrough
 
-[1.5.0]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.4.0...HEAD
+[1.5.1]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.3.12...v1.4.0
 [1.3.12]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.3.11...v1.3.12
 [1.3.11]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.3.10...v1.3.11
