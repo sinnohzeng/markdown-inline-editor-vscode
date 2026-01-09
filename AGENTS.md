@@ -103,6 +103,7 @@
   - Document all changes using categories: `Added`, `Changed`, `Fixed`, `Removed`, `Deprecated`, `Security`
   - Update the comparison links at the bottom of the file
 - **Verify feature list in `README.md`** to ensure all current features are accurately documented before each release.
+- **Verify issue list on github [Github issues](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues)
 - **Build the extension** to verify compilation:
   ```bash
   npm run build
