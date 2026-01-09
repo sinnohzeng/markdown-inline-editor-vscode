@@ -41,6 +41,29 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-var-requires': 'off',
     },
+  },
+  // Node.js scripts directory - allow CommonJS and Node.js globals
+  {
+    files: ['scripts/**/*.js'],
+    languageOptions: {
+      globals: {
+        require: 'readonly',
+        module: 'readonly',
+        exports: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        process: 'readonly',
+        console: 'readonly',
+        Buffer: 'readonly',
+        global: 'readonly',
+      },
+      ecmaVersion: 'latest',
+      sourceType: 'script',
+    },
+    rules: {
+      '@typescript-eslint/no-var-requires': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
+    },
   }
 );
 

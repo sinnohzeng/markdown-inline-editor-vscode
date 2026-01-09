@@ -1,7 +1,3 @@
-# Agents.md – Practical Guide for AI Code Assistants
-
----
-
 ## Shared Context
 
 **Tech Stack**
@@ -92,7 +88,6 @@
 
 **Definition of Done**
 - Code builds and passes all tests/coverage
-- No performance regression (see `/docs/PERFORMANCE_IMPROVEMENTS.md`)
 - All relevant docs or tests updated
 - Contribution aligns with project structure and style
 
@@ -122,23 +117,3 @@
   ```
 - **CI/CD publishes** to VS Code Marketplace and OpenVSX automatically for tags beginning with `v`.
 - The release workflow is managed by `.github/workflows/ci.yaml`, which triggers on tags matching `refs/tags/v*`.
-
----
-
-## Workflow Chart Design Guidelines
-
-**Node Format Rules:**
-- **Bold node titles** - All phase/activity titles must be in bold using `**Title**`
-- **0-3 bullet points maximum** - Each node should have at most 3 information bullet points
-- Keep bullet points concise and focused on key information
-- Prioritize the most important details per phase
-
-**Examples:**
-- ✅ Good: `["**Requirements Model**<br/>• Functional requirements<br/>• Non-functional requirements<br/>• Acceptance criteria"]`
-- ❌ Bad: `["**Requirements Model**<br/>• Functional requirements<br/>• Non-functional requirements<br/>• Acceptance criteria<br/>• Stakeholder sign-off<br/>• Requirements traceability<br/>• Change management process"]` (too many bullets)
-
-**Purpose:**
-- Maintain visual clarity and readability in workflow diagrams
-- Focus on essential information per phase
-- Prevent information overload in chart nodes
-

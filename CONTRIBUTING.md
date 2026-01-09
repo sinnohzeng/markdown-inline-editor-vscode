@@ -1,65 +1,8 @@
 # Contributing to Markdown Inline Editor
 
-Thank you for your interest in contributing! This document provides guidelines and instructions for contributing to the Markdown Inline Editor extension.
+Thank you for your interest in contributing! This guide covers the workflow and conventions specific to this project.
 
-## Getting Started
-
-### Prerequisites
-
-- **Node.js** 20 or higher
-- **VS Code** 1.88.0 or higher (or Cursor IDE)
-- **Git** for version control
-- Basic familiarity with TypeScript and VS Code extension development
-
-### Development Setup
-
-1. **Fork and clone the repository:**
-   ```bash
-   git clone https://github.com/SeardnaSchmid/markdown-inline-editor-vscode.git
-   cd markdown-inline-editor-vscode
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Build the extension:**
-   ```bash
-   npm run compile
-   npm run bundle
-   ```
-
-4. **Run tests:**
-   ```bash
-   npm test
-   ```
-
-5. **Open in VS Code/Cursor:**
-   ```bash
-   code .
-   ```
-
-6. **Debug the extension:**
-   - Press `F5` to launch a new Extension Development Host
-   - Open a markdown file in the new window to test your changes
-
-## Project Structure
-
-```
-src/
-├── extension.ts          # Extension entry point and activation
-├── parser.ts             # Markdown AST parsing (remark-based)
-├── parser-remark.ts      # Remark dependency helper
-├── decorator.ts          # Decoration management and caching
-├── decorations.ts        # VS Code decoration type definitions
-├── link-provider.ts      # Clickable link provider
-└── parser/__tests__/     # Comprehensive test suite (123+ tests)
-
-dist/                     # Compiled output (do not edit directly)
-docs/                     # Documentation and improvement notes
-assets/                   # Icons and static assets
-```
+**Quick Start:** See the [README](README.md#getting-started-developers) for setup instructions.
 
 ## Development Workflow
 
@@ -68,7 +11,7 @@ assets/                   # Icons and static assets
 Always work on a feature branch, never directly on `main`:
 
 ```bash
-git checkout -b feat/my-feature-name
+git checkout -b feat/my-feature
 # or
 git checkout -b fix/bug-description
 ```
@@ -156,11 +99,19 @@ Before committing, ensure your code passes linting and type checking:
 ```bash
 npm run lint           # Check code style
 npm run compile        # Type check and compile
+npm run lint:docs      # Validate feature file outlines (if editing docs/features/)
 ```
 
 **Fix linting issues:**
 - Most issues can be auto-fixed with your editor's ESLint integration
-- Follow the project's ESLint configuration (`.eslintrc.json`)
+- Follow the project's ESLint configuration
+
+**Feature File Validation:**
+If you're editing files in `docs/features/`, you must ensure they follow the correct outline structure:
+- YAML frontmatter with `status`, `updateDate`, and `priority`
+- H1 title
+- Required H2 sections in order: Overview, Implementation, Acceptance Criteria, Notes, Examples
+- Run `npm run lint:docs` to validate all feature files
 
 ### 6. Commit Your Changes
 
@@ -204,10 +155,9 @@ git commit -m "test(parser): add edge case tests for nested formatting"
 This extension prioritizes performance, especially for:
 - **Selection changes** - Should be instant (uses cached decorations)
 - **Document edits** - Should feel responsive during rapid typing
-- **Large documents** - Should remain usable (>1000 lines)
+- **Large documents** - Should remain usable (files over 1MB may experience slower parsing)
 
 **Before submitting performance-related changes:**
-- Review `/docs/PERFORMANCE_IMPROVEMENTS.md`
 - Ensure no performance regressions
 - Consider adding benchmarks for significant changes
 
@@ -221,7 +171,7 @@ This extension prioritizes performance, especially for:
 
 1. **Push your branch:**
    ```bash
-   git push origin feat/my-feature-name
+   git push origin feat/my-feature
    ```
 
 2. **Create a Pull Request** on GitHub:
@@ -233,6 +183,7 @@ This extension prioritizes performance, especially for:
    - ✅ All tests pass (`npm test`)
    - ✅ Code compiles without errors (`npm run compile`)
    - ✅ Linting passes (`npm run lint`)
+   - ✅ Feature file validation passes (`npm run lint:docs`) - if editing `docs/features/`
    - ✅ No performance regressions
    - ✅ Documentation updated if needed
    - ✅ Follows Conventional Commits
@@ -266,6 +217,7 @@ This extension prioritizes performance, especially for:
 4. **Update documentation:**
    - Update README.md if it's a user-facing feature
    - Update AGENTS.md if it affects architecture
+   - If editing feature files in `docs/features/`, ensure they pass validation (`npm run lint:docs`)
 
 ### Debugging
 
@@ -274,29 +226,9 @@ This extension prioritizes performance, especially for:
 - Use `console.log()` sparingly (remove before committing)
 
 **Common issues:**
-- **Decorations not showing**: Check if file is `.md`, `.markdown`, or `.mdx`
+- **Decorations not showing**: Check if file is `.md`
 - **Extension not activating**: Check activation events in `package.json`
 - **Performance issues**: Profile with VS Code's built-in tools
-
-### Building and Packaging
-
-**Build for development:**
-```bash
-npm run compile    # TypeScript compilation
-npm run bundle     # Bundle with esbuild
-```
-
-**Package for distribution:**
-```bash
-npm run package    # Create .vsix file
-```
-
-**Test the packaged extension:**
-```bash
-cursor --install-extension dist/extension.vsix --force
-# or
-code --install-extension dist/extension.vsix --force
-```
 
 ## Documentation
 
@@ -305,13 +237,78 @@ When contributing, please update relevant documentation:
 - **README.md** - User-facing features, installation, usage
 - **AGENTS.md** - Architecture, agent roles, development guidelines
 - **CONTRIBUTING.md** - This file (if workflow changes)
+- **FAQ.md** - Common issues and solutions (if user-facing changes)
 - **Code comments** - JSDoc for public APIs
+
+### Feature File Structure
+
+Files in `docs/features/` must follow a specific outline structure. The validation script (`npm run lint:docs`) enforces:
+
+1. **YAML Frontmatter** (required):
+   ```yaml
+   ---
+   status: ✅ Implemented
+   updateDate: 2024-12-19
+   priority: Core Feature
+   ---
+   ```
+
+2. **Required Sections** (in order):
+   - `# Title` (H1 - exactly one)
+   - `## Overview` (H2)
+   - `## Implementation` (H2)
+   - `## Acceptance Criteria` (H2 - with Gherkin scenarios)
+   - `## Notes` (H2)
+   - `## Examples` (H2)
+
+3. **Validation:**
+   - Run `npm run lint:docs` before committing changes to feature files
+   - The script validates frontmatter fields, heading structure, and section order
+   - Headings inside code blocks are automatically ignored
+
+**Example structure:**
+```markdown
+---
+status: ✅ Implemented
+updateDate: 2024-12-19
+priority: Core Feature
+---
+
+# Feature Name
+
+## Overview
+
+Brief description of the feature.
+
+## Implementation
+
+How the feature works.
+
+## Acceptance Criteria
+
+### Basic Functionality
+```gherkin
+Feature: Feature name
+  Scenario: Basic case
+    When I type <markdown>
+    Then the expected behavior occurs
+```
+
+## Notes
+
+- Additional context
+- Requirements
+
+## Examples
+
+- `markdown` → rendered output
+```
 
 ## Getting Help
 
 - **Open an issue** for bugs or feature requests
 - **Check existing issues** before creating new ones
-- **Review AGENTS.md** for detailed architecture and agent roles
+- **Review README.md** for high-level architecture overview
 - **Read the code** - The codebase is well-documented
 
 ## Code of Conduct
