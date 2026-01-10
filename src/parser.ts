@@ -46,25 +46,46 @@ export type DecorationType =
   | 'frontmatter';
 
 /**
- * Parser for extracting decoration ranges from markdown text.
+ * Type for the unified processor used to parse markdown text to a Root AST node.
  * 
- * Uses remark to parse markdown and extract positions for:
- * - Syntax markers (to hide)
- * - Content (to style with bold, italic, headings, etc.)
+ * The processor is created by the `unified()` function from the unified ecosystem
+ * and configured with remark-parse and remark-gfm plugins.
+ */
+type UnifiedProcessor = {
+  parse: (text: string) => Root;
+};
+
+/**
+ * Type for the visit function from unist-util-visit.
  * 
+ * Traverses nodes in a tree structure (AST) and calls the visitor function
+ * for each node. The visitor receives: node, index (optional), parent (optional).
+ */
+type VisitFunction = (
+  tree: Root,
+  visitor: (node: Node, index?: number, parent?: Node) => void
+) => void;
+
+/**
+ * A parser that extracts decoration ranges from markdown text.
+ *
+ * This class uses `remark` to parse the input markdown and determines ranges for:
+ * - Markdown syntax markers (for hiding, e.g., `**`, `#`, `` ` ``)
+ * - Content (for applying styles such as bold, italic, headings, etc.)
+ *
  * @class MarkdownParser
  * @example
- * // For sync usage (VS Code extension):
+ * // Synchronous usage (VS Code extension):
  * const parser = new MarkdownParser();
  * const decorations = parser.extractDecorations('# Heading\n**bold** text');
- * 
- * // For async usage (tests with ESM modules):
+ *
+ * // Asynchronous usage (ESM tests):
  * const parser = await MarkdownParser.create();
  * const decorations = parser.extractDecorations('# Heading\n**bold** text');
  */
 export class MarkdownParser {
-  private processor: any;
-  private visit: any;
+  private processor: UnifiedProcessor;
+  private visit: VisitFunction;
 
   constructor() {
     const { unified, remarkParse, remarkGfm, visit } = getRemarkProcessorSync();

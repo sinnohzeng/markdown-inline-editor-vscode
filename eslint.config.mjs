@@ -8,7 +8,7 @@ export default tseslint.config(
   {
     rules: {
       '@typescript-eslint/naming-convention': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': [
         'warn',
         {
@@ -35,11 +35,19 @@ export default tseslint.config(
       'examples/**',
     ],
   },
-  // Allow require() in parser-remark.ts for CommonJS compatibility
+  // Allow require() and any types in parser-remark.ts for CommonJS compatibility
   {
     files: ['**/parser-remark.ts'],
     rules: {
       '@typescript-eslint/no-var-requires': 'off',
+      '@typescript-eslint/no-explicit-any': 'off', // Necessary for dynamic require/import pattern
+    },
+  },
+  // Allow any types in test mocks
+  {
+    files: ['**/__mocks__/**', '**/__tests__/**'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'warn', // Warn instead of error for test files
     },
   },
   // Node.js scripts directory - allow CommonJS and Node.js globals

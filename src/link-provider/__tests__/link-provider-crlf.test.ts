@@ -1,5 +1,5 @@
 import { MarkdownParser } from '../../parser';
-import { TextDocument, Uri, workspace } from '../../test/__mocks__/vscode';
+import { workspace } from '../../test/__mocks__/vscode';
 import { createCRLFText, mapNormalizedToOriginal } from '../../parser/__tests__/helpers/crlf-helpers';
 
 // Mock workspace.getConfiguration

@@ -66,3 +66,34 @@ export function mapNormalizedToOriginal(normalizedPos: number, originalText?: st
   // If we didn't find it (shouldn't happen), return the last position
   return originalText.length;
 }
+
+/**
+ * Normalizes heading text to anchor format.
+ * 
+ * Converts heading text to the format used in markdown anchor links:
+ * - Converts to lowercase
+ * - Removes non-word characters (except spaces and hyphens)
+ * - Replaces spaces with hyphens
+ * - Collapses multiple hyphens into single hyphen
+ * - Trims leading/trailing whitespace
+ * 
+ * This matches the GitHub Flavored Markdown (GFM) anchor link generation algorithm.
+ * 
+ * @param text - The heading text to normalize
+ * @returns Normalized anchor text
+ * 
+ * @example
+ * ```typescript
+ * normalizeAnchorText('Hello World!') // Returns 'hello-world'
+ * normalizeAnchorText('  Test  123  ') // Returns 'test-123'
+ * normalizeAnchorText('Multiple---Hyphens') // Returns 'multiple-hyphens'
+ * ```
+ */
+export function normalizeAnchorText(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+}

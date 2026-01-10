@@ -1,4 +1,4 @@
-import { Range, TextEditor, TextDocument, TextDocumentChangeEvent, workspace, window, Position, WorkspaceEdit, Selection, TextEditorSelectionChangeKind } from 'vscode';
+import { Range, TextEditor, TextDocument, TextDocumentChangeEvent, workspace, window, Position, WorkspaceEdit, Selection, TextEditorSelectionChangeKind, TextEditorDecorationType } from 'vscode';
 import {
   HideDecorationType,
   BoldDecorationType,
@@ -26,6 +26,18 @@ import {
 } from './decorations';
 import { MarkdownParser, DecorationRange, DecorationType } from './parser';
 import { mapNormalizedToOriginal } from './position-mapping';
+
+/**
+ * Performance and caching constants.
+ */
+const PERFORMANCE_CONSTANTS = {
+  /** Maximum number of documents to cache (LRU eviction) */
+  MAX_CACHE_SIZE: 10,
+  /** Debounce timeout for document changes (ms) - balances responsiveness vs performance */
+  DEBOUNCE_TIMEOUT_MS: 150,
+  /** Maximum timeout for requestIdleCallback (ms) - ensures updates don't wait indefinitely */
+  IDLE_CALLBACK_TIMEOUT_MS: 300,
+} as const;
 
 /**
  * Cache entry for document decorations.
@@ -61,7 +73,7 @@ export class Decorator {
   private decorationCache = new Map<string, CacheEntry>();
 
   /** Maximum number of documents to cache (LRU eviction) */
-  private readonly maxCacheSize = 10;
+  private readonly maxCacheSize = PERFORMANCE_CONSTANTS.MAX_CACHE_SIZE;
 
   /** Access counter for LRU eviction */
   private accessCounter = 0;
@@ -254,7 +266,7 @@ export class Decorator {
     }
 
     // Debounce with two-tier strategy:
-    // 1. Short timeout for responsive feedback (150ms)
+    // 1. Short timeout for responsive feedback
     // 2. Fallback to idle callback for heavy work during continuous typing
     this.updateTimeout = setTimeout(() => {
       this.updateTimeout = undefined;
@@ -274,8 +286,8 @@ export class Decorator {
         this.idleCallbackHandle = undefined;
         this.updateDecorationsInternal();
         this.pendingUpdateVersion.delete(cacheKey);
-      }, { timeout: 300 }); // Force execution after 300ms max
-    }, 150);
+      }, { timeout: PERFORMANCE_CONSTANTS.IDLE_CALLBACK_TIMEOUT_MS });
+    }, PERFORMANCE_CONSTANTS.DEBOUNCE_TIMEOUT_MS);
   }
 
   /**
@@ -610,7 +622,7 @@ export class Decorator {
   }
 
   /** Mapping of decoration types to their VS Code decoration instances */
-  private decorationTypeMap = new Map<DecorationType, any>([
+  private decorationTypeMap = new Map<DecorationType, TextEditorDecorationType>([
     ['hide', this.hideDecorationType],
     ['bold', this.boldDecorationType],
     ['italic', this.italicDecorationType],

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { Decorator } from './decorator';
 import { MarkdownLinkProvider } from './link-provider';
+import { normalizeAnchorText } from './position-mapping';
 
 /**
  * Reads the defaultBehaviors.diffView.applyDecorations configuration setting.
@@ -87,11 +88,7 @@ export function activate(context: vscode.ExtensionContext) {
         // Check if this line is a heading that matches the anchor
         const headingMatch = line.match(/^#+\s+(.+)$/);
         if (headingMatch) {
-          const headingText = headingMatch[1].toLowerCase()
-            .replace(/[^\w\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-')
-            .trim();
+          const headingText = normalizeAnchorText(headingMatch[1]);
           
           if (headingText === anchor) {
             // Navigate to this line
