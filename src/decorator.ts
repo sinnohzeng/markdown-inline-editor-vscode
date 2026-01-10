@@ -802,6 +802,26 @@ export class Decorator {
 
 
   /**
+   * Recreates the code decoration type when theme changes.
+   * This ensures the background color adapts to the new theme.
+   */
+  recreateCodeDecorationType(): void {
+    // Dispose the old decoration type
+    this.codeDecorationType.dispose();
+    
+    // Create a new decoration type with updated theme colors
+    this.codeDecorationType = CodeDecorationType();
+    
+    // Update the decoration type map
+    this.decorationTypeMap.set('code', this.codeDecorationType);
+    
+    // Reapply decorations with the new decoration type
+    if (this.activeEditor && this.isMarkdownDocument()) {
+      this.updateDecorationsForSelection();
+    }
+  }
+
+  /**
    * Dispose of resources and clear any pending updates.
    */
   dispose() {
@@ -815,6 +835,11 @@ export class Decorator {
     }
     this.decorationCache.clear();
     this.pendingUpdateVersion.clear();
+    
+    // Dispose all decoration types
+    for (const decorationType of this.decorationTypeMap.values()) {
+      decorationType.dispose();
+    }
   }
 
   /**

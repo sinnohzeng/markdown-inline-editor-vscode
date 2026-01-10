@@ -1,4 +1,20 @@
-import { window, ThemeColor } from 'vscode';
+import { window, ThemeColor, ColorThemeKind } from 'vscode';
+
+/**
+ * Opacity value for brightness adjustment overlays.
+ * Creates approximately 30% brightness change when composited over editor background.
+ */
+const BRIGHTNESS_OVERLAY_OPACITY = 0.1;
+
+/**
+ * Determines if the current theme is dark or high contrast.
+ * 
+ * @returns {boolean} True if theme is dark or high contrast
+ */
+function isDarkTheme(): boolean {
+  const themeKind = window.activeColorTheme.kind;
+  return themeKind === ColorThemeKind.Dark || themeKind === ColorThemeKind.HighContrast;
+}
 
 /**
  * Creates a decoration type for hiding markdown syntax.
@@ -82,12 +98,30 @@ export function StrikethroughDecorationType() {
 /**
  * Creates a decoration type for inline code styling.
  * 
+ * Uses the editor background color with theme-aware brightness adjustment:
+ * - Dark themes: Lightens by ~30% using white overlay
+ * - Light themes: Darkens by ~30% using black overlay
+ * 
+ * Since VS Code doesn't allow reading ThemeColor values, we use semi-transparent
+ * overlays that composite over the editor background.
+ * 
+ * Note: This decoration type is automatically recreated when the theme changes
+ * via {@link Decorator.recreateCodeDecorationType}, ensuring the background color
+ * adapts to the current theme without requiring a restart.
+ * 
  * @returns {vscode.TextEditorDecorationType} A decoration type for inline code
  */
 export function CodeDecorationType() {
+  const isDark = isDarkTheme();
+  
+  // For dark themes: use white overlay to lighten (~30% brighter)
+  // For light themes: use black overlay to darken (~30% darker)
+  const backgroundColor = isDark
+    ? `rgba(255, 255, 255, ${BRIGHTNESS_OVERLAY_OPACITY})` // White overlay - lightens dark backgrounds
+    : `rgba(0, 0, 0, ${BRIGHTNESS_OVERLAY_OPACITY})`;      // Black overlay - darkens light backgrounds
+  
   return window.createTextEditorDecorationType({
-    backgroundColor: new ThemeColor('textCodeBlock.background'),
-    borderColor: new ThemeColor('editorWidget.border'),
+    backgroundColor: backgroundColor,
   });
 }
 
@@ -98,7 +132,7 @@ export function CodeDecorationType() {
  */
 export function CodeBlockDecorationType() {
   return window.createTextEditorDecorationType({
-    backgroundColor: new ThemeColor('textCodeBlock.background'), // Use theme color instead of red
+    backgroundColor: new ThemeColor('textCodeBlock.background'),
     isWholeLine: true, // Extend background to full line width
   });
 }

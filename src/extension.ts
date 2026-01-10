@@ -136,10 +136,16 @@ export function activate(context: vscode.ExtensionContext) {
     }
   });
 
+  // Listen for theme changes to update code decoration colors
+  const changeColorTheme = vscode.window.onDidChangeActiveColorTheme(() => {
+    decorator.recreateCodeDecorationType();
+  });
+
   context.subscriptions.push(changeActiveTextEditor);
   context.subscriptions.push(changeTextEditorSelection);
   context.subscriptions.push(changeDocument);
   context.subscriptions.push(changeConfiguration);
+  context.subscriptions.push(changeColorTheme);
   context.subscriptions.push(linkProviderDisposable);
   context.subscriptions.push(toggleDecorationsCommand);
   context.subscriptions.push(navigateToAnchorCommand);
