@@ -145,16 +145,31 @@ function validateFile(filePath) {
   }
   
   return {
-    file: path.basename(filePath),
+    file: path.relative(FEATURES_DIR, filePath),
     errors,
     valid: errors.length === 0
   };
 }
 
+function getAllMarkdownFiles(dir) {
+  const files = [];
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      // Recursively get files from subdirectories
+      files.push(...getAllMarkdownFiles(fullPath));
+    } else if (entry.isFile() && entry.name.endsWith('.md') && entry.name !== 'AGENTS.md') {
+      files.push(fullPath);
+    }
+  }
+  
+  return files;
+}
+
 function main() {
-  const files = fs.readdirSync(FEATURES_DIR)
-    .filter(file => file.endsWith('.md') && file !== 'AGENTS.md')
-    .map(file => path.join(FEATURES_DIR, file));
+  const files = getAllMarkdownFiles(FEATURES_DIR);
   
   const results = files.map(validateFile);
   const invalidFiles = results.filter(r => !r.valid);

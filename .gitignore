@@ -127,3 +127,6 @@ dist/
 # context information
 context-example-repositories/
 examples/
+
+# Cursor IDE files
+.cursor/
