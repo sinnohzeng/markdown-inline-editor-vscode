@@ -2,7 +2,7 @@
 title: Markdown Example Document - UAT Checklist
 ---
 
-# Markdown Example - UAT Checklist 
+# Markdown Example - UAT Checklist
 
 ## Syntax Shadowing System - Testing Guide
 
@@ -36,6 +36,46 @@ UAT-CHECK()
 UAT-CHECK()
 
 ---
+
+
+## Basic Markdown Smoke Test
+
+# Document Title
+
+This is a paragraph with **bold**, *italic*, ~~strikethrough~~, `inline code`, and a [link to example.com](https://example.com).
+
+## Section Heading
+
+Here's an image: ![Alt text](image.png)
+
+- Unordered list item 1
+- Unordered list item 2 with **bold**
+- Nested list root
+  - Nested item with *italic*
+
+1. Ordered list item 1
+1. Ordered list item 1
+2. Ordered list item 2 with `code`
+1. Ordered list item 1
+2. Ordered list item 2 with `code`
+3. Ordered list item 3 with [link](https://example.com)
+
+- [x] Completed task
+- [ ] Unchecked task
+- [x] Clickable checkbox list item
+
+> This is a blockquote with **bold** text
+> Nested blockquote root
+> > Nested blockquote with *italic* text
+
+```python
+# Code block example
+def example():
+    return "Hello, World!"
+``` 
+
+---
+
 
 ## Font Styles
 
@@ -352,63 +392,6 @@ function hello() {
   console.log("Hello, World!");
 }
 ```
-UAT-CHECK()
-
----
-
-## Basic Markdown Smoke Test
-
-# Document Title 
-UAT-CHECK()
-
-This is a paragraph with **bold**, *italic*, ~~strikethrough~~, `inline code`, and a [link to example.com](https://example.com). 
-UAT-CHECK()
-
-## Section Heading 
-UAT-CHECK()
-
-Here's an image: ![Alt text](image.png) 
-UAT-CHECK()
-
-- Unordered list item 1 
-UAT-CHECK()
-- Unordered list item 2 with **bold** 
-UAT-CHECK()
-- Nested list root
-  - Nested item with *italic* 
-UAT-CHECK()
-
-1. Ordered list item 1 
-UAT-CHECK()
-1. Ordered list item 1
-2. Ordered list item 2 with `code` 
-UAT-CHECK()
-1. Ordered list item 1
-2. Ordered list item 2 with `code` 
-3. Ordered list item 3 with [link](https://example.com) 
-UAT-CHECK()
-
-- [x] Completed task 
-UAT-CHECK()
-- [ ] Unchecked task 
-UAT-CHECK()
-- [ ] Clickable checkbox list item
-UAT-CHECK()
-
-
-> This is a blockquote with **bold** text 
-UAT-CHECK()
-> Nested blockquote root 
-> > Nested blockquote with *italic* text 
-UAT-CHECK()
-
----
-
-```python
-# Code block example
-def example():
-    return "Hello, World!"
-``` 
 UAT-CHECK()
 
 ---

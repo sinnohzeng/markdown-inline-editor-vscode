@@ -10,7 +10,9 @@ priority: Core Feature
 
 This milestone implements a formal 3-state model for syntax shadowing with scope-based detection, replacing the previous line-based approach that caused raw markdown to be incorrectly applied to all non-selected lines.
 
-## Implementation Summary
+## Implementation
+
+This milestone implements a formal 3-state model for syntax shadowing with scope-based detection, replacing the previous line-based approach that caused raw markdown to be incorrectly applied to all non-selected lines.
 
 ### What Was Fixed
 
@@ -30,7 +32,7 @@ The new implementation uses **scope-based detection** that:
 3. **Proper selection handling**: Uses all intersecting scopes for text selections, showing raw for everything the user explicitly selected
 4. **3-state logic**: Implements Rendered (default), Ghost (cursor on line but not in scope), and Raw (cursor/selection in scope) states correctly
 
-## Technical Implementation
+### Technical Implementation
 
 ### Key Components
 
@@ -116,18 +118,18 @@ if (decoration.type === 'hide' || decoration.type === 'transparent') {
    - Updated `applyDecorations()` to handle ghostFaint decorations
    - Updated `dispose()` to dispose ghostFaint decoration type
 
-## Why Previous Approach Failed
+### Why Previous Approach Failed
 
-### Problem: Line-Based Detection
+**Problem: Line-Based Detection**
 
-**Old code**:
+Old code:
 ```typescript
 const shouldRevealRaw =
   this.isRangeSelected(range, selectedRanges) ||
   this.isLineOfRangeSelected(range, selectedLines);
 ```
 
-**Issues**:
+Issues:
 1. `isLineOfRangeSelected()` checked if decoration was on ANY line with a cursor/selection
    - If cursor on line 5, ALL decorations on line 5 showed raw
    - No distinction between "cursor inside construct" vs "cursor on same line"
@@ -135,9 +137,9 @@ const shouldRevealRaw =
    - For multi-line constructs (code blocks), cursor on one line revealed entire block
    - No concept of "smallest containing scope"
 
-### Solution: Scope-Based Detection
+**Solution: Scope-Based Detection**
 
-**New code**:
+New code:
 ```typescript
 const scopeEntries = this.extractScopes(decorations, originalText);
 const rawRanges = this.mergeRanges([
@@ -146,12 +148,32 @@ const rawRanges = this.mergeRanges([
 ]);
 ```
 
-**Benefits**:
+Benefits:
 1. **Precise**: Only reveals the specific construct containing the cursor (smallest scope)
 2. **Context-aware**: Distinguishes between "cursor inside construct" (Raw) and "cursor on line but outside construct" (Ghost)
 3. **Multi-line safe**: Cursor on one line of a multi-line construct doesn't reveal entire construct unless cursor is actually inside it
 
-## Example Scenarios
+## Acceptance Criteria
+
+✅ **Rendered is readable**: Syntax markers hidden when not editing
+✅ **Ghost provides edit cues**: Faint markers visible when cursor on line but not in construct
+✅ **Raw is reachable**: Full syntax visible when cursor/selection inside construct
+✅ **Nested formatting predictable**: Smallest containing scope selected for nested constructs
+
+## Notes
+
+- The 3-state model provides three distinct visibility states for syntax markers:
+  - **Rendered (default)**: Syntax markers hidden, only formatted content visible
+  - **Ghost**: Cursor on line but not inside construct - markers show at reduced opacity (configurable via `markdownInlineEditor.decorations.ghostFaintOpacity`, default: 0.3)
+  - **Raw**: Cursor/selection inside construct - markers fully visible for editing
+- State priority: Raw > Ghost > Rendered
+- Scope-based detection ensures precise state application based on cursor position within markdown constructs
+- Related features:
+  - [Cursor Scope Detection](./cursor-scope-detection.md) - Foundation for scope-based detection
+  - [Syntax Shadowing M1](./syntax-shadowing-m1-keep-styling-while-editing.md) - Previous milestone
+- Status: ✅ **IMPLEMENTED** - The 3-state model is working correctly with scope-based detection.
+
+## Examples
 
 ### Scenario 1: Cursor Inside Bold
 **Input**: `**bold text**` with cursor inside "bold"
@@ -163,7 +185,7 @@ const rawRanges = this.mergeRanges([
 **Input**: `**bold text** and more` with cursor after "more"
 - **Scope detected**: `strong` scope (positions 0-12)
 - **State**: Ghost (cursor on line but not in scope)
-- **Result**: `**bold text**` faintly visible (50% opacity), rest rendered
+- **Result**: `**bold text**` faintly visible (30% opacity by default), rest rendered
 
 ### Scenario 3: Cursor on Line, No Constructs
 **Input**: `plain text` with cursor anywhere
@@ -180,12 +202,12 @@ const rawRanges = this.mergeRanges([
 
 ### Scenario 5: Multi-Line Code Block
 **Input**: 
-```
+````markdown
 ```
 code
 block
 ```
-```
+````
 With cursor on line 2 (inside "code")
 - **Scope detected**: `codeBlock` scope (entire block)
 - **State**: Raw (cursor inside scope)
@@ -195,19 +217,3 @@ With cursor on line 4 (after closing fence)
 - **No scope detected** (cursor outside block)
 - **State**: Rendered
 - **Result**: Code block rendered normally (correct, cursor is outside)
-
-## Acceptance Criteria Status
-
-✅ **Rendered is readable**: Syntax markers hidden when not editing
-✅ **Ghost provides edit cues**: Faint markers visible when cursor on line but not in construct
-✅ **Raw is reachable**: Full syntax visible when cursor/selection inside construct
-✅ **Nested formatting predictable**: Smallest containing scope selected for nested constructs
-
-## Related Features
-
-- [Cursor Scope Detection](./cursor-scope-detection.md) - Foundation for scope-based detection
-- [Syntax Shadowing M1](./syntax-shadowing-m1-keep-styling-while-editing.md) - Previous milestone
-
-## Status
-
-✅ **IMPLEMENTED** - The 3-state model is working correctly with scope-based detection.

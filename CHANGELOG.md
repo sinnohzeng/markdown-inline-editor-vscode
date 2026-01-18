@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Syntax Shadowing Milestone 2: 3-state model (Rendered / Ghost / Raw)
+  - Implements scope-based detection for precise syntax marker visibility
+  - **Rendered state (default)**: Syntax markers hidden, only formatted content visible
+  - **Ghost state**: Cursor on line but not inside construct - markers show at reduced opacity (configurable via `markdownInlineEditor.decorations.ghostFaintOpacity`, default: 0.3)
+  - **Raw state**: Cursor/selection inside construct - markers fully visible for editing
+  - Uses smallest containing scope for cursor positions, preventing multi-line constructs from being revealed when cursor is only on one line
+  - Configuration setting `markdownInlineEditor.decorations.ghostFaintOpacity` to control ghost state opacity (0.0-1.0, default: 0.3)
+
 ### Removed
 - `markdownInlineEditor.defaultBehaviors.editor.applyDecorations` setting
   - This setting was redundant since users can toggle decorations via the command (`mdInline.toggleDecorations`)

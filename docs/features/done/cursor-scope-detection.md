@@ -1,11 +1,14 @@
-# Cursor Scope Detection - Positive Implementation
+---
+status: DONE
+updateDate: 2026-01-18
+priority: Core Feature
+---
+
+# Cursor Scope Detection
 
 ## Overview
-This document captures the positive implementation behavior for cursor-based markdown syntax node identification in Ghost and Raw states.
 
-## Behavior Description
-
-When the cursor is positioned over markdown syntax on a single line (without any text selection), the markdown syntax nodes are correctly identified and the appropriate state (Ghost or Raw) is applied.
+This document captures the positive implementation behavior for cursor-based markdown syntax node identification in Ghost and Raw states. When the cursor is positioned over markdown syntax on a single line (without any text selection), the markdown syntax nodes are correctly identified and the appropriate state (Ghost or Raw) is applied.
 
 ### Key Characteristics
 
@@ -19,8 +22,6 @@ When the cursor is positioned over markdown syntax on a single line (without any
 
 4. **Correct Node Identification**: The parser correctly identifies which markdown syntax nodes the cursor is associated with, enabling proper state transitions.
 
-## Implementation Details
-
 ### Scope Detection
 - The system uses `collectCursorScopeRanges` to identify the smallest scope containing the cursor position.
 - Only the smallest intersecting scope is selected for Raw state activation.
@@ -30,7 +31,7 @@ When the cursor is positioned over markdown syntax on a single line (without any
 - **Ghost (G)**: Markdown syntax applied, syntax ghosted (faint markers visible)
 - **Raw**: Markdown syntax applied, syntax fully visible (no hiding)
 
-## Code Implementation
+## Implementation
 
 ### 1. Cursor Position Collection
 
@@ -148,24 +149,22 @@ if (decoration.type === 'hide' || decoration.type === 'hideStructural') {
 - **Ghost**: `isGhostLine = true` AND `intersectsRaw = false` → syntax faintly visible
 - **Rendered**: `!isGhostLine` AND `!intersectsRaw` → syntax hidden (default)
 
-## Use Cases
+## Acceptance Criteria
+
+✅ **Cursor position detection**: Empty selections (cursor positions) are tracked separately from non-empty selections
+✅ **Smallest scope selection**: Only the smallest containing scope is selected for Raw state activation
+✅ **Precise state application**: State is applied correctly based on cursor position within markdown constructs
+✅ **Ghost state activation**: Ghost state is applied when cursor is on line but not inside construct scope
+✅ **Raw state activation**: Raw state is applied when cursor is inside construct scope
+
+## Notes
 
 This behavior is essential for:
 - Providing visual feedback when editing markdown
 - Showing syntax markers when needed for editing context
 - Maintaining a clean rendered view when not actively editing a construct
 
-## Related Features
-
-- Syntax Shadowing - Milestone 2: 3-state model (Rendered / Ghost / Raw)
-- Cursor-based scope detection
-- Selective reveal rules
-
-## Status
-
-✅ **IMPLEMENTED** - This behavior is working correctly in the current implementation.
-
-## Comparison: Cursor vs Selection Detection
+**Comparison: Cursor vs Selection Detection**
 
 ### Cursor-Based Detection (This Feature)
 - **Trigger**: Empty selection (cursor position only)
@@ -183,9 +182,43 @@ This behavior is essential for:
 - Cursor inside `**bold**` → Only the `strong` scope becomes Raw
 - Selection covering `**bold**` and `*italic*` → Both `strong` and `emphasis` scopes become Raw
 
-## Notes
-
+**Additional Notes**:
 - This only applies to cursor positions, not text selections
 - Text selections use a different mechanism (`collectRawRanges`) that collects all intersecting scopes
 - The cursor-based detection is more precise, selecting only the smallest containing scope
 - This precision ensures that when editing nested constructs, only the innermost construct shows raw syntax
+- Related features:
+  - Syntax Shadowing - Milestone 2: 3-state model (Rendered / Ghost / Raw)
+  - Cursor-based scope detection
+  - Selective reveal rules
+- Status: ✅ **IMPLEMENTED** - This behavior is working correctly in the current implementation.
+
+## Examples
+
+**Example 1: Cursor inside bold construct**
+```markdown
+**bold text**
+```
+- Cursor inside "bold" → Only the `strong` scope becomes Raw
+- Result: `**bold text**` markers fully visible
+
+**Example 2: Cursor on line but outside construct**
+```markdown
+**bold text** and more text
+```
+- Cursor after "more" → Ghost state for bold construct
+- Result: `**bold text**` markers faintly visible (30% opacity), rest rendered
+
+**Example 3: Nested constructs**
+```markdown
+[**bold**](url)
+```
+- Cursor inside "bold" → Only the `strong` scope becomes Raw (smallest scope)
+- Result: `**bold**` markers fully visible, link markers remain hidden
+
+**Example 4: Selection vs cursor**
+```markdown
+**bold** and *italic*
+```
+- Cursor inside `**bold**` → Only `strong` scope becomes Raw
+- Selection covering both → Both `strong` and `emphasis` scopes become Raw

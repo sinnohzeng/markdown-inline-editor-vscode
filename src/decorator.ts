@@ -375,6 +375,9 @@ export class Decorator {
     for (const decorationType of this.decorationTypeMap.values()) {
       this.activeEditor.setDecorations(decorationType, []);
     }
+    
+    // Also clear ghost faint decoration (not in decorationTypeMap)
+    this.activeEditor.setDecorations(this.ghostFaintDecorationType, []);
   }
 
   /**
@@ -1363,20 +1366,49 @@ export class Decorator {
   }
 
   /**
-   * Recreates the ghost faint decoration type with updated opacity from settings.
-   * Called when the ghostFaintOpacity configuration changes.
+   * Helper method to recreate a decoration type with updated settings.
+   * Handles dispose, recreate, optional map update, and reapply.
+   * 
+   * @private
+   * @param {TextEditorDecorationType} oldDecorationType - The decoration type to dispose
+   * @param {() => TextEditorDecorationType} createNew - Factory function to create new decoration type
+   * @param {(newType: TextEditorDecorationType) => void} updateProperty - Callback to update the property
+   * @param {DecorationType | undefined} mapKey - Optional key to update in decorationTypeMap
    */
-  recreateGhostFaintDecorationType(): void {
+  private recreateDecorationType(
+    oldDecorationType: TextEditorDecorationType,
+    createNew: () => TextEditorDecorationType,
+    updateProperty: (newType: TextEditorDecorationType) => void,
+    mapKey?: DecorationType
+  ): void {
     // Dispose the old decoration type
-    this.ghostFaintDecorationType.dispose();
+    oldDecorationType.dispose();
     
-    // Create a new decoration type with updated opacity
-    this.ghostFaintDecorationType = GhostFaintDecorationType(this.getGhostFaintOpacity());
+    // Create a new decoration type
+    const newDecorationType = createNew();
+    updateProperty(newDecorationType);
+    
+    // Update the decoration type map if key provided
+    if (mapKey) {
+      this.decorationTypeMap.set(mapKey, newDecorationType);
+    }
     
     // Reapply decorations with the new decoration type
     if (this.activeEditor && this.isMarkdownDocument()) {
       this.updateDecorationsForSelection();
     }
+  }
+
+  /**
+   * Recreates the ghost faint decoration type with updated opacity from settings.
+   * Called when the ghostFaintOpacity configuration changes.
+   */
+  recreateGhostFaintDecorationType(): void {
+    this.recreateDecorationType(
+      this.ghostFaintDecorationType,
+      () => GhostFaintDecorationType(this.getGhostFaintOpacity()),
+      (newType) => { this.ghostFaintDecorationType = newType; }
+    );
   }
 
   /**
@@ -1384,16 +1416,11 @@ export class Decorator {
    * Called when the frontmatterDelimiterOpacity configuration changes.
    */
   recreateFrontmatterDelimiterDecorationType(): void {
-    // Dispose the old decoration type
-    this.frontmatterDelimiterDecorationType.dispose();
-    
-    // Create a new decoration type with updated opacity
-    this.frontmatterDelimiterDecorationType = FrontmatterDelimiterDecorationType(this.getFrontmatterDelimiterOpacity());
-    
-    // Reapply decorations with the new decoration type
-    if (this.activeEditor && this.isMarkdownDocument()) {
-      this.updateDecorationsForSelection();
-    }
+    this.recreateDecorationType(
+      this.frontmatterDelimiterDecorationType,
+      () => FrontmatterDelimiterDecorationType(this.getFrontmatterDelimiterOpacity()),
+      (newType) => { this.frontmatterDelimiterDecorationType = newType; }
+    );
   }
 
   /**
@@ -1401,19 +1428,12 @@ export class Decorator {
    * Called when the codeBlockLanguageOpacity configuration changes.
    */
   recreateCodeBlockLanguageDecorationType(): void {
-    // Dispose the old decoration type
-    this.codeBlockLanguageDecorationType.dispose();
-    
-    // Create a new decoration type with updated opacity
-    this.codeBlockLanguageDecorationType = CodeBlockLanguageDecorationType(this.getCodeBlockLanguageOpacity());
-    
-    // Update the decoration type map
-    this.decorationTypeMap.set('codeBlockLanguage', this.codeBlockLanguageDecorationType);
-    
-    // Reapply decorations with the new decoration type
-    if (this.activeEditor && this.isMarkdownDocument()) {
-      this.updateDecorationsForSelection();
-    }
+    this.recreateDecorationType(
+      this.codeBlockLanguageDecorationType,
+      () => CodeBlockLanguageDecorationType(this.getCodeBlockLanguageOpacity()),
+      (newType) => { this.codeBlockLanguageDecorationType = newType; },
+      'codeBlockLanguage'
+    );
   }
 
   /**
