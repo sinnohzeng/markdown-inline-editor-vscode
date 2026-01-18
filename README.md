@@ -44,6 +44,13 @@ The extension uses an intelligent **3-state syntax shadowing system** that adapt
 
 Configure ghost opacity: `markdownInlineEditor.decorations.ghostFaintOpacity` (default: 0.3)
 
+<p align="center" style="max-width:95%; margin-left:auto; margin-right:auto;">
+  <img src="assets/syntax-shadowing.png" alt="Syntax Shadowing 3-State Model demonstration" width="95%"><br>
+  <span style="display:block; font-size:90%; color:#888; margin-top:8px;">
+    <em>Visual demonstration of the 3-state model: Rendered (syntax hidden), Ghost (faint markers on active line), and Raw (full syntax visible when editing).</em>
+  </span>
+</p>
+
 ## Demo
 
 <p align="center" style="max-width:95%; margin-left:auto; margin-right:auto;">
@@ -61,7 +68,7 @@ Configure ghost opacity: `markdownInlineEditor.decorations.ghostFaintOpacity` (d
   <em style="font-size:90%; color:#888;">Right: Selecting a line reveals the original Markdown syntax for direct editing.</em>
 </p>
 <p align="center" style="max-width:95%; margin-left:auto; margin-right:auto;">
-  <img src="assets/code-blocks-frontmatter.png" alt="Code blocks and YAML frontmatter rendering" width="95%"><br>
+  <img src="assets/code-blocks.png" alt="Code blocks and YAML frontmatter rendering" width="95%"><br>
   <span style="display:block; font-size:90%; color:#888; margin-top:8px;">
     <em>Code blocks with syntax highlighting and YAML frontmatter with background styling—all syntax markers hidden for a clean reading experience.</em>
   </span>
