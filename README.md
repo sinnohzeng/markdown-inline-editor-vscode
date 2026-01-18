@@ -2,18 +2,47 @@
 
 <img src="assets/icon.png" align="right" alt="Extension Icon" width="120" height="120">
 
-**Write Markdown like a rich text editor** – see **bold**, *italic*, and `code` styled inline while syntax markers stay hidden. Click to edit raw Markdown. Your files remain 100% standard `.md`.
+**Write Markdown like a rich text editor** – see **bold**, *italic*, and `code` styled inline while syntax markers stay hidden. Intelligent 3-state syntax shadowing adapts to your editing context. Your files remain 100% standard `.md`.
 
 **Why?** Less clutter, more focus. Git-friendly. Works everywhere.
 
 ## ✨ Key Features
 
-* **Hide syntax** – No more `**`, `~~`, backticks cluttering your view
+* **Intelligent Syntax Shadowing** – 3-state model (Rendered / Ghost / Raw) adapts syntax visibility to your editing context
+* **Hide syntax** – No more `**`, `~~`, backticks cluttering your view when reading
 * **Smart reveal** – Click any text to instantly see/edit raw Markdown  
+* **Ghost state** – Faint syntax markers appear when cursor is on a line, providing edit cues without clutter
 * **Fast** – Intelligent caching, no lag on selection changes
 * **Compatible** – Standard `.md` files, works with any tool
 * **Theme-aware** – Automatically adapts to your VS Code theme
 * **Zero configuration** – Works out of the box
+
+## 🎯 Syntax Shadowing: 3-State Model
+
+The extension uses an intelligent **3-state syntax shadowing system** that adapts syntax visibility based on your editing context:
+
+### **Rendered State** (Default)
+- Syntax markers are **hidden** – see only formatted content
+- Clean, distraction-free reading experience
+- Example: `**bold**` appears as **bold** with no visible markers
+
+### **Ghost State** (Cursor on line)
+- Syntax markers appear **faintly** (30% opacity by default, configurable)
+- Provides edit cues without cluttering the view
+- Only applies to constructs on the active line, not the entire document
+- Example: Cursor on a line with `**bold**` shows faint `**` markers
+
+### **Raw State** (Cursor/selection inside construct)
+- Syntax markers are **fully visible** for direct editing
+- Precise scope detection – only the specific construct you're editing shows raw
+- Example: Cursor inside `**bold**` reveals the full `**bold**` syntax
+
+**Special behavior for structural markers:**
+- **Blockquotes, lists, and checkboxes** stay fully rendered on active lines unless you directly click on the marker
+- **Headings** show raw `#` markers and remove styling when cursor is on the heading line
+- **Ordered list numbers** always remain visible
+
+Configure ghost opacity: `markdownInlineEditor.decorations.ghostFaintOpacity` (default: 0.3)
 
 ## Demo
 
@@ -39,9 +68,10 @@
    - [OpenVSX Registry](https://open-vsx.org/extension/CodeSmith/markdown-inline-editor-vscode)
    - [Github Releases](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/releases)
 2. **Open** any `.md` file
-3. **Start typing** – formatting appears automatically with syntax hidden
-4. **Click/select text** to reveal raw Markdown for editing
-5. **Toggle anytime** – Click the toolbar button or use `Ctrl+Shift+P` / `Cmd+Shift+P` → "Toggle Markdown Decorations"
+3. **Start typing** – formatting appears automatically with syntax hidden (Rendered state)
+4. **Move cursor** – Faint syntax markers appear on active lines (Ghost state)
+5. **Click/select text** – Raw Markdown syntax becomes fully visible for editing (Raw state)
+6. **Toggle anytime** – Click the toolbar button or use `Ctrl+Shift+P` / `Cmd+Shift+P` → "Toggle Markdown Decorations"
 
 ## Recommended Extensions
 
@@ -155,10 +185,11 @@ src/
 ```
 
 **How it works:**
-1. **Parser** (`parser.ts`) – Uses remark to parse Markdown into an AST
-2. **Decorator** (`decorator.ts`) – Manages VS Code decorations to hide syntax markers
-3. **Caching** – Intelligent caching prevents redundant parsing on selection changes
-4. **Reveal on selection** – Clicking text reveals raw Markdown for editing
+1. **Parser** (`parser.ts`) – Uses remark to parse Markdown into an AST and extract scopes
+2. **Decorator** (`decorator.ts`) – Manages VS Code decorations with 3-state syntax shadowing
+3. **Scope-based detection** – Precisely identifies markdown constructs for context-aware syntax visibility
+4. **Caching** – Intelligent caching prevents redundant parsing on selection changes
+5. **3-state model** – Rendered (hidden), Ghost (faint), Raw (visible) states adapt to editing context
 
 ### Installing
 
