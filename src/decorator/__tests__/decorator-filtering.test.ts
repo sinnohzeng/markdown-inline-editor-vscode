@@ -59,7 +59,7 @@ describe('Decorator filtering behavior', () => {
     expect(filtered.has('hide')).toBe(false);
   });
 
-  it('reveals heading markers on active line', () => {
+  it('reveals heading markers and removes heading styling on active line', () => {
     const text = '# Heading';
     const decorations: DecorationRange[] = [
       { startPos: 0, endPos: 2, type: 'hide' },
@@ -72,6 +72,8 @@ describe('Decorator filtering behavior', () => {
 
     expect(filtered.has('heading1')).toBe(false);
     expect(filtered.has('heading')).toBe(false);
+    expect(filtered.has('hide')).toBe(false);
+    expect(filtered.has('ghostFaint' as DecorationType)).toBe(false);
   });
 
   it('does not suppress marker decorations on non-active lines', () => {
@@ -86,7 +88,7 @@ describe('Decorator filtering behavior', () => {
     expect(filtered.get('listItem')?.length).toBe(1);
   });
 
-  it('keeps checkbox decoration when cursor is inside the checkbox', () => {
+  it('reveals raw checkbox when cursor is inside the checkbox', () => {
     const text = '- [ ] task';
     const decorations: DecorationRange[] = [
       { startPos: 0, endPos: 2, type: 'listItem' },
@@ -94,9 +96,60 @@ describe('Decorator filtering behavior', () => {
     ];
 
     const selection = new Selection(new Position(0, 3), new Position(0, 3));
-    const filtered = filterDecorationsForSelection(text, decorations, [[0, 10]], selection);
+    const filtered = filterDecorationsForSelection(text, decorations, [], selection);
 
-    expect(filtered.get('checkboxUnchecked')?.length).toBe(1);
+    expect(filtered.has('checkboxUnchecked')).toBe(false);
+    expect(filtered.get('listItem')?.length).toBe(1);
+    expect(filtered.has('ghostFaint' as DecorationType)).toBe(false);
+  });
+
+  it('keeps blockquote decoration on active line when cursor is not on marker', () => {
+    const text = '> quote';
+    const decorations: DecorationRange[] = [
+      { startPos: 0, endPos: 1, type: 'blockquote' },
+    ];
+
+    const selection = new Selection(new Position(0, 2), new Position(0, 2));
+    const filtered = filterDecorationsForSelection(text, decorations, [], selection);
+
+    expect(filtered.get('blockquote')?.length).toBe(1);
+    expect(filtered.has('ghostFaint' as DecorationType)).toBe(false);
+  });
+
+  it('reveals raw blockquote marker when cursor is on marker', () => {
+    const text = '> quote';
+    const decorations: DecorationRange[] = [
+      { startPos: 0, endPos: 1, type: 'blockquote' },
+    ];
+
+    const selection = new Selection(new Position(0, 0), new Position(0, 0));
+    const filtered = filterDecorationsForSelection(text, decorations, [], selection);
+
+    expect(filtered.has('blockquote')).toBe(false);
+  });
+
+  it('keeps list item decoration on active line when cursor is not on marker', () => {
+    const text = '- item';
+    const decorations: DecorationRange[] = [
+      { startPos: 0, endPos: 2, type: 'listItem' },
+    ];
+
+    const selection = new Selection(new Position(0, 3), new Position(0, 3));
+    const filtered = filterDecorationsForSelection(text, decorations, [], selection);
+
+    expect(filtered.get('listItem')?.length).toBe(1);
+    expect(filtered.has('ghostFaint' as DecorationType)).toBe(false);
+  });
+
+  it('reveals raw list item marker when cursor is on marker', () => {
+    const text = '- item';
+    const decorations: DecorationRange[] = [
+      { startPos: 0, endPos: 2, type: 'listItem' },
+    ];
+
+    const selection = new Selection(new Position(0, 0), new Position(0, 0));
+    const filtered = filterDecorationsForSelection(text, decorations, [], selection);
+
     expect(filtered.has('listItem')).toBe(false);
   });
 

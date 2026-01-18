@@ -762,39 +762,75 @@ export class Decorator {
       ...this.collectCursorScopeRanges(cursorPositions, scopes),
     ]);
 
+    const selectionOnlyMarkerTypes = new Set<DecorationType>([
+      'blockquote',
+      'listItem',
+      'checkboxUnchecked',
+      'checkboxChecked',
+    ]);
+    const headingTypes = new Set<DecorationType>([
+      'heading',
+      'heading1',
+      'heading2',
+      'heading3',
+      'heading4',
+      'heading5',
+      'heading6',
+    ]);
+    const headingMarkerEndPositions = new Set<number>();
+    for (const decoration of decorations) {
+      if (headingTypes.has(decoration.type)) {
+        headingMarkerEndPositions.add(decoration.startPos);
+      }
+    }
+
     const filtered = new Map<DecorationType, Range[]>();
     const ghostFaintRanges: Range[] = [];
+
+    const selectionOrCursorOverlaps = (range: Range): boolean => {
+      const selectionOverlaps = selectedRanges.some((selection) => {
+        const intersection = range.intersection(selection);
+        return intersection !== undefined;
+      });
+      if (selectionOverlaps) {
+        return true;
+      }
+      return cursorPositions.some((position) => range.contains(position));
+    };
 
     for (const decoration of decorations) {
       const range = this.createRange(decoration.startPos, decoration.endPos, originalText);
       if (!range) continue;
+      const isActiveLine = activeLines.size > 0 && activeLines.has(range.start.line);
 
-      // Special handling for checkbox decorations:
-      // - Keep checkbox visible when clicking on it (for toggle functionality)
-      const isCheckbox = decoration.type === 'checkboxChecked' || decoration.type === 'checkboxUnchecked';
-      
-      if (isCheckbox) {
-        const cursorInCheckbox = cursorPositions.some(pos => 
-          pos.line === range.start.line && 
-          pos.character >= range.start.character && 
-          pos.character <= range.end.character
-        );
-        
-        if (cursorInCheckbox) {
-          const ranges = filtered.get(decoration.type) || [];
-          ranges.push(range);
-          filtered.set(decoration.type, ranges);
+      if (selectionOnlyMarkerTypes.has(decoration.type)) {
+        if (selectionOrCursorOverlaps(range)) {
+          // Raw state: show actual marker characters
           continue;
         }
+        // Rendered state: apply marker decorations even on active lines
+        const ranges = filtered.get(decoration.type) || [];
+        ranges.push(range);
+        filtered.set(decoration.type, ranges);
+        continue;
+      }
+
+      if (headingTypes.has(decoration.type) && isActiveLine) {
+        // Show raw heading text (no heading styling) on active lines
+        continue;
       }
       
       if (decoration.type === 'hide' || decoration.type === 'transparent') {
         const intersectsRaw = this.rangeIntersectsAny(range, rawRanges);
-        const decorationLine = range.start.line;
-        const isActiveLine = activeLines.size > 0 && activeLines.has(decorationLine);
+        const isHeadingMarkerHide = decoration.type === 'hide' &&
+          headingMarkerEndPositions.has(decoration.endPos);
 
         if (intersectsRaw) {
           // Raw state: skip (show actual syntax)
+          continue;
+        }
+        if (isHeadingMarkerHide && isActiveLine) {
+          // Show heading markers on active lines
           continue;
         }
         if (isActiveLine) {
@@ -811,8 +847,6 @@ export class Decorator {
 
       if (isMarkerDecorationType(decoration.type)) {
         const intersectsRaw = this.rangeIntersectsAny(range, rawRanges);
-        const decorationLine = range.start.line;
-        const isActiveLine = activeLines.size > 0 && activeLines.has(decorationLine);
 
         if (intersectsRaw) {
           // Raw state: skip marker decorations (show actual syntax)
