@@ -27,6 +27,7 @@ import {
 } from './decorations';
 import { MarkdownParser, DecorationRange, DecorationType } from './parser';
 import { mapNormalizedToOriginal } from './position-mapping';
+import { isMarkerDecorationType } from './decorator/decoration-categories';
 
 /**
  * Performance and caching constants.
@@ -608,10 +609,16 @@ export class Decorator {
         }
       }
       
-      // For all decorations (including checkboxes when cursor is not on them):
-      // Hide to show raw markdown when selection overlaps or cursor is on the line
-      if (this.isRangeSelected(range, selectedRanges) || this.isLineOfRangeSelected(range, selectedLines)) {
-        continue;
+      // Only suppress marker/replacement decorations when selection overlaps
+      // or cursor is on the line. Semantic styling stays active.
+      if (isMarkerDecorationType(decoration.type)) {
+        const shouldRevealRaw =
+          this.isRangeSelected(range, selectedRanges) ||
+          this.isLineOfRangeSelected(range, selectedLines);
+
+        if (shouldRevealRaw) {
+          continue;
+        }
       }
 
       // Add to appropriate type array

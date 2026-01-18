@@ -138,11 +138,22 @@ class MockTextEditor {
 
 export const TextEditor = MockTextEditor as any;
 
+export enum ColorThemeKind {
+  Light = 1,
+  Dark = 2,
+  HighContrast = 3,
+  HighContrastLight = 4,
+}
+
 export const window = {
   createTextEditorDecorationType: (_options: any) => ({}),
   activeTextEditor: undefined as any,
+  activeColorTheme: {
+    kind: ColorThemeKind.Dark,
+  },
   onDidChangeActiveTextEditor: () => ({ dispose: () => {} }),
   onDidChangeTextEditorSelection: () => ({ dispose: () => {} }),
+  onDidChangeActiveColorTheme: () => ({ dispose: () => {} }),
 };
 
 export const workspace = {

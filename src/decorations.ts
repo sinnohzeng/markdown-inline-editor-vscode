@@ -167,14 +167,13 @@ export function HeadingDecorationType() {
  * Heading decoration configuration
  */
 const HEADING_CONFIG = [
-  { size: '200%', bold: true },  // H1
-  { size: '150%', bold: true },  // H2
-  { size: '110%', bold: true },  // H3
-  { size: '100%', bold: false }, // H4
-  { size: '90%', bold: false },  // H5
-  { size: '80%', bold: false },  // H6
+  { size: '180%', bold: true },  // H1: Distinct, but not overwhelming
+  { size: '140%', bold: true },  // H2: Clearly a subsection
+  { size: '120%', bold: true },  // H3: Just above body text
+  { size: '110%', bold: false }, // H4: Subtle bump
+  { size: '100%', bold: false }, // H5: Same size, usually distinct by color/bold
+  { size: '90%',  bold: false }, // H6: Slightly diminished
 ];
-
 /**
  * Creates a heading decoration type with the specified level.
  * 

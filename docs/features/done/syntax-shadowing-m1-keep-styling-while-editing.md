@@ -1,5 +1,5 @@
 ---
-status: TODO
+status: DONE
 updateDate: 2026-01-17
 priority: Core Feature
 ---
@@ -11,6 +11,24 @@ priority: Core Feature
 This milestone is the minimum-change rework of “syntax shadowing” (hiding markdown markers): when editing a line, reveal raw syntax markers for editability **without losing semantic styling** on the content.
 
 Deep-dive background and design variants: [docs/plans/syntax-shadowing-rework-analysis.plan.md](../../plans/syntax-shadowing-rework-analysis.plan.md).
+
+## Implementation
+
+- Marker/replacement decorations are categorized separately from semantic decorations via `isMarkerDecorationType()` helper
+- When cursor is on a line or selection overlaps, only marker decorations are suppressed:
+  - `hide` - syntax markers (**, #, etc.)
+  - `transparent` - inline code backticks
+  - `blockquote` - '>' replacement markers
+  - `listItem` - list marker replacements
+  - `checkboxUnchecked` / `checkboxChecked` - checkbox replacements
+  - `horizontalRule` - horizontal rule replacements
+- Semantic decorations (bold, italic, link, code, codeBlock, frontmatter, strikethrough, image, orderedListItem) remain active on active lines
+- Heading styling is suppressed on the active line to expose raw `#` markers during edits
+- Checkbox smart-click behavior preserved: checkbox decoration remains visible when cursor is inside checkbox range
+- Implementation files:
+  - `src/decorator/decoration-categories.ts` - Marker decoration categorization
+  - `src/decorator.ts` - Updated filtering logic in `filterDecorations()` method (lines 614-622)
+  - `src/decorator/__tests__/decorator-filtering.test.ts` - Test coverage
 
 ## Goal
 
