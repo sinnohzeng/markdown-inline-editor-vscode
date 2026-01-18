@@ -26,6 +26,7 @@ import {
   CheckboxUncheckedDecorationType,
   CheckboxCheckedDecorationType,
   FrontmatterDecorationType,
+  FrontmatterDelimiterDecorationType,
 } from './decorations';
 import { MarkdownParser, DecorationRange, DecorationType } from './parser';
 import { mapNormalizedToOriginal } from './position-mapping';
@@ -113,7 +114,7 @@ export class Decorator {
   private strikethroughDecorationType = StrikethroughDecorationType();
   private codeDecorationType = CodeDecorationType();
   private codeBlockDecorationType = CodeBlockDecorationType();
-  private codeBlockLanguageDecorationType = CodeBlockLanguageDecorationType();
+  private codeBlockLanguageDecorationType = CodeBlockLanguageDecorationType(this.getCodeBlockLanguageOpacity());
   private headingDecorationType = HeadingDecorationType();
   private heading1DecorationType = Heading1DecorationType();
   private heading2DecorationType = Heading2DecorationType();
@@ -130,6 +131,7 @@ export class Decorator {
   private checkboxUncheckedDecorationType = CheckboxUncheckedDecorationType();
   private checkboxCheckedDecorationType = CheckboxCheckedDecorationType();
   private frontmatterDecorationType = FrontmatterDecorationType();
+  private frontmatterDelimiterDecorationType = FrontmatterDelimiterDecorationType(this.getFrontmatterDelimiterOpacity());
 
   /**
    * Sets the active text editor and immediately updates decorations.
@@ -1151,6 +1153,7 @@ export class Decorator {
     ['checkboxUnchecked', this.checkboxUncheckedDecorationType],
     ['checkboxChecked', this.checkboxCheckedDecorationType],
     ['frontmatter', this.frontmatterDecorationType],
+    ['frontmatterDelimiter', this.frontmatterDelimiterDecorationType],
   ]);
 
   /**
@@ -1321,6 +1324,28 @@ export class Decorator {
     return config.get<number>('decorations.ghostFaintOpacity', 0.3);
   }
 
+  /**
+   * Gets the frontmatter delimiter opacity from configuration.
+   * 
+   * @private
+   * @returns {number} Opacity value between 0.0 and 1.0
+   */
+  private getFrontmatterDelimiterOpacity(): number {
+    const config = workspace.getConfiguration('markdownInlineEditor');
+    return config.get<number>('decorations.frontmatterDelimiterOpacity', 0.3);
+  }
+
+  /**
+   * Gets the code block language opacity from configuration.
+   * 
+   * @private
+   * @returns {number} Opacity value between 0.0 and 1.0
+   */
+  private getCodeBlockLanguageOpacity(): number {
+    const config = workspace.getConfiguration('markdownInlineEditor');
+    return config.get<number>('decorations.codeBlockLanguageOpacity', 0.3);
+  }
+
   recreateCodeDecorationType(): void {
     // Dispose the old decoration type
     this.codeDecorationType.dispose();
@@ -1347,6 +1372,43 @@ export class Decorator {
     
     // Create a new decoration type with updated opacity
     this.ghostFaintDecorationType = GhostFaintDecorationType(this.getGhostFaintOpacity());
+    
+    // Reapply decorations with the new decoration type
+    if (this.activeEditor && this.isMarkdownDocument()) {
+      this.updateDecorationsForSelection();
+    }
+  }
+
+  /**
+   * Recreates the frontmatter delimiter decoration type with updated opacity from settings.
+   * Called when the frontmatterDelimiterOpacity configuration changes.
+   */
+  recreateFrontmatterDelimiterDecorationType(): void {
+    // Dispose the old decoration type
+    this.frontmatterDelimiterDecorationType.dispose();
+    
+    // Create a new decoration type with updated opacity
+    this.frontmatterDelimiterDecorationType = FrontmatterDelimiterDecorationType(this.getFrontmatterDelimiterOpacity());
+    
+    // Reapply decorations with the new decoration type
+    if (this.activeEditor && this.isMarkdownDocument()) {
+      this.updateDecorationsForSelection();
+    }
+  }
+
+  /**
+   * Recreates the code block language decoration type with updated opacity from settings.
+   * Called when the codeBlockLanguageOpacity configuration changes.
+   */
+  recreateCodeBlockLanguageDecorationType(): void {
+    // Dispose the old decoration type
+    this.codeBlockLanguageDecorationType.dispose();
+    
+    // Create a new decoration type with updated opacity
+    this.codeBlockLanguageDecorationType = CodeBlockLanguageDecorationType(this.getCodeBlockLanguageOpacity());
+    
+    // Update the decoration type map
+    this.decorationTypeMap.set('codeBlockLanguage', this.codeBlockLanguageDecorationType);
     
     // Reapply decorations with the new decoration type
     if (this.activeEditor && this.isMarkdownDocument()) {

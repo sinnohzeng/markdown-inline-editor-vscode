@@ -34,6 +34,26 @@ function getGhostFaintOpacitySetting(): number {
 }
 
 /**
+ * Reads the decorations.frontmatterDelimiterOpacity configuration setting.
+ * 
+ * @returns {number} Opacity value between 0.0 and 1.0 for frontmatter delimiters
+ */
+function getFrontmatterDelimiterOpacitySetting(): number {
+  const config = vscode.workspace.getConfiguration('markdownInlineEditor');
+  return config.get<number>('decorations.frontmatterDelimiterOpacity', 0.3);
+}
+
+/**
+ * Reads the decorations.codeBlockLanguageOpacity configuration setting.
+ * 
+ * @returns {number} Opacity value between 0.0 and 1.0 for code block language identifiers
+ */
+function getCodeBlockLanguageOpacitySetting(): number {
+  const config = vscode.workspace.getConfiguration('markdownInlineEditor');
+  return config.get<number>('decorations.codeBlockLanguageOpacity', 0.3);
+}
+
+/**
  * Activates the markdown inline preview extension.
  * 
  * This function is called by VS Code when the extension is activated (typically
@@ -147,6 +167,14 @@ export function activate(context: vscode.ExtensionContext) {
     
     if (event.affectsConfiguration('markdownInlineEditor.decorations.ghostFaintOpacity')) {
       decorator.recreateGhostFaintDecorationType();
+    }
+    
+    if (event.affectsConfiguration('markdownInlineEditor.decorations.frontmatterDelimiterOpacity')) {
+      decorator.recreateFrontmatterDelimiterDecorationType();
+    }
+    
+    if (event.affectsConfiguration('markdownInlineEditor.decorations.codeBlockLanguageOpacity')) {
+      decorator.recreateCodeBlockLanguageDecorationType();
     }
   });
 

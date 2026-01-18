@@ -45,7 +45,8 @@ export type DecorationType =
   | 'checkboxUnchecked'
   | 'checkboxChecked'
   | 'horizontalRule'
-  | 'frontmatter';
+  | 'frontmatter'
+  | 'frontmatterDelimiter';
 
 /**
  * Type for the unified processor used to parse markdown text to a Root AST node.
@@ -1269,11 +1270,29 @@ export class MarkdownParser {
             ? closingDelimiterStart + MarkdownParser.MIN_FRONTMATTER_LENGTH  // End at end of --- (no newline, end of document)
             : closingLineEnd;             // End at newline position (exclusive, so newline is not included)
           
-          // Apply decoration to entire block from opening delimiter start to end of closing delimiter line
+          // Apply background decoration to entire block from opening delimiter start to end of closing delimiter line
           decorations.push({
             startPos: openingDelimiterStart,
             endPos: closingLineEndPos,
             type: 'frontmatter',
+          });
+
+          // Apply opacity decoration to opening delimiter (---)
+          // The delimiter is exactly 3 characters: ---
+          const openingDelimiterEnd = openingDelimiterStart + MarkdownParser.MIN_FRONTMATTER_LENGTH;
+          decorations.push({
+            startPos: openingDelimiterStart,
+            endPos: openingDelimiterEnd,
+            type: 'frontmatterDelimiter',
+          });
+
+          // Apply opacity decoration to closing delimiter (---)
+          // The delimiter is exactly 3 characters: ---
+          const closingDelimiterEnd = closingDelimiterStart + MarkdownParser.MIN_FRONTMATTER_LENGTH;
+          decorations.push({
+            startPos: closingDelimiterStart,
+            endPos: closingDelimiterEnd,
+            type: 'frontmatterDelimiter',
           });
         }
         return;
