@@ -94,7 +94,7 @@ if (decoration.type === 'hide' || decoration.type === 'transparent') {
 
 **States**:
 - **Raw**: Decoration intersects raw range → syntax fully visible
-- **Ghost**: Cursor on line but NOT in raw range → syntax faintly visible (30% opacity)
+- **Ghost**: Cursor on line but NOT in raw range → syntax faintly visible (50% opacity)
 - **Rendered**: Default → syntax hidden
 
 ### Code Changes
@@ -102,7 +102,7 @@ if (decoration.type === 'hide' || decoration.type === 'transparent') {
 #### Files Modified
 
 1. **`src/decorations.ts`**
-   - Added `GhostFaintDecorationType()` with 30% opacity
+   - Added `GhostFaintDecorationType()` with 50% opacity
 
 2. **`src/decorator.ts`**
    - Added `ScopeEntry` interface
@@ -163,7 +163,7 @@ const rawRanges = this.mergeRanges([
 **Input**: `**bold text** and more` with cursor after "more"
 - **Scope detected**: `strong` scope (positions 0-12)
 - **State**: Ghost (cursor on line but not in scope)
-- **Result**: `**bold text**` faintly visible (30% opacity), rest rendered
+- **Result**: `**bold text**` faintly visible (50% opacity), rest rendered
 
 ### Scenario 3: Cursor on Line, No Constructs
 **Input**: `plain text` with cursor anywhere

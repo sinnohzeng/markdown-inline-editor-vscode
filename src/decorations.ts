@@ -60,7 +60,7 @@ export function TransparentDecorationType() {
  */
 export function GhostFaintDecorationType() {
   return window.createTextEditorDecorationType({
-    opacity: '0.3',
+    opacity: '0.5',
   });
 }
 

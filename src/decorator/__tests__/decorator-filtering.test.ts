@@ -125,6 +125,78 @@ describe('Decorator filtering behavior', () => {
     // Horizontal rule decoration should be skipped (raw state - show actual ---)
     expect(filtered.has('horizontalRule')).toBe(false);
   });
+
+  it('reveals inline code in raw state when cursor is at the end boundary', () => {
+    const text = '`simple inline code`';
+    const decorations: DecorationRange[] = [
+      { startPos: 0, endPos: 21, type: 'code' }, // code decoration spans entire range including backticks
+      { startPos: 0, endPos: 1, type: 'transparent' }, // opening backtick (inline code uses transparent)
+      { startPos: 20, endPos: 21, type: 'transparent' }, // closing backtick
+    ];
+
+    // Test with cursor at the end boundary (right after closing backtick)
+    const selection = new Selection(new Position(0, 21), new Position(0, 21));
+    const filtered = filterDecorationsForSelection(text, decorations, selection);
+
+    // Transparent decorations should be skipped (raw state - show actual backticks)
+    expect(filtered.has('transparent')).toBe(false);
+    // Code decoration should still be applied (semantic styling)
+    expect(filtered.get('code')?.length).toBe(1);
+  });
+
+  it('reveals inline code in raw state when cursor is at the start boundary', () => {
+    const text = '`simple inline code`';
+    const decorations: DecorationRange[] = [
+      { startPos: 0, endPos: 21, type: 'code' }, // code decoration spans entire range including backticks
+      { startPos: 0, endPos: 1, type: 'transparent' }, // opening backtick (inline code uses transparent)
+      { startPos: 20, endPos: 21, type: 'transparent' }, // closing backtick
+    ];
+
+    // Test with cursor at the start boundary (at opening backtick)
+    const selection = new Selection(new Position(0, 0), new Position(0, 0));
+    const filtered = filterDecorationsForSelection(text, decorations, selection);
+
+    // Transparent decorations should be skipped (raw state - show actual backticks)
+    expect(filtered.has('transparent')).toBe(false);
+    // Code decoration should still be applied (semantic styling)
+    expect(filtered.get('code')?.length).toBe(1);
+  });
+
+  it('reveals inline code backticks in raw state when cursor is inside the code', () => {
+    const text = '`Inline code`';
+    const decorations: DecorationRange[] = [
+      { startPos: 0, endPos: 13, type: 'code' }, // code decoration spans entire range including backticks
+      { startPos: 0, endPos: 1, type: 'transparent' }, // opening backtick
+      { startPos: 12, endPos: 13, type: 'transparent' }, // closing backtick
+    ];
+
+    // Test with cursor inside the code content
+    const selection = new Selection(new Position(0, 5), new Position(0, 5));
+    const filtered = filterDecorationsForSelection(text, decorations, selection);
+
+    // Transparent decorations should be skipped (raw state - show actual backticks)
+    expect(filtered.has('transparent')).toBe(false);
+    // Code decoration should still be applied (semantic styling)
+    expect(filtered.get('code')?.length).toBe(1);
+  });
+
+  it('reveals inline code backticks in raw state when selection covers the code', () => {
+    const text = '`Inline code`';
+    const decorations: DecorationRange[] = [
+      { startPos: 0, endPos: 13, type: 'code' }, // code decoration spans entire range including backticks
+      { startPos: 0, endPos: 1, type: 'transparent' }, // opening backtick
+      { startPos: 12, endPos: 13, type: 'transparent' }, // closing backtick
+    ];
+
+    // Test with selection covering the entire code construct
+    const selection = new Selection(new Position(0, 0), new Position(0, 13));
+    const filtered = filterDecorationsForSelection(text, decorations, selection);
+
+    // Transparent decorations should be skipped (raw state - show actual backticks)
+    expect(filtered.has('transparent')).toBe(false);
+    // Code decoration should still be applied (semantic styling)
+    expect(filtered.get('code')?.length).toBe(1);
+  });
 });
 
 describe('Marker decoration categorization', () => {

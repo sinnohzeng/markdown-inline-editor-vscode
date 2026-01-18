@@ -599,6 +599,37 @@ export class Decorator {
         continue;
       }
 
+      // Special handling for inline code: code decoration spans entire range including backticks,
+      // and transparent decorations overlap with the code decoration boundaries
+      if (contentDec.type === 'code') {
+        // Find transparent decorations that overlap with code decoration boundaries
+        // Opening transparent should start at the same position as code decoration
+        const openingTransparent = decorations.find((decoration) =>
+          decoration.type === 'transparent' &&
+          decoration.startPos === contentDec.startPos
+        );
+        // Closing transparent should end at the same position as code decoration
+        const closingTransparent = decorations.find((decoration) =>
+          decoration.type === 'transparent' &&
+          decoration.endPos === contentDec.endPos
+        );
+
+        if (openingTransparent && closingTransparent) {
+          // Scope spans from opening transparent start to closing transparent end
+          const scopeStart = openingTransparent.startPos;
+          const scopeEnd = closingTransparent.endPos;
+          const range = this.createRange(scopeStart, scopeEnd, originalText);
+          if (range) {
+            scopes.push({
+              startPos: scopeStart,
+              endPos: scopeEnd,
+              range,
+            });
+          }
+        }
+        continue;
+      }
+
       // Special handling for code blocks: they have a different structure
       // The codeBlock decoration spans the entire block including fences,
       // but the fences are hidden separately
@@ -635,13 +666,14 @@ export class Decorator {
         continue;
       }
 
-      // Standard pattern: content decoration with hide decorations before/after
+      // Standard pattern: content decoration with hide/transparent decorations before/after
+      // Other constructs (bold, italic, etc.) have hide decorations adjacent to content
       const beforeHide = decorations.find((decoration) =>
-        decoration.type === 'hide' &&
+        (decoration.type === 'hide' || decoration.type === 'transparent') &&
         decoration.endPos === contentDec.startPos
       );
       const afterHide = decorations.find((decoration) =>
-        decoration.type === 'hide' &&
+        (decoration.type === 'hide' || decoration.type === 'transparent') &&
         decoration.startPos === contentDec.endPos
       );
 
@@ -704,6 +736,9 @@ export class Decorator {
    * Collects cursor scope ranges.
    * Returns the smallest scope containing each cursor position.
    * 
+   * Includes boundary positions (start and end) so that cursors directly at
+   * the construct boundaries show raw state instead of ghost state.
+   * 
    * @private
    * @param {Position[]} cursorPositions - Cursor positions (empty selections)
    * @param {ScopeEntry[]} scopes - All scope entries
@@ -716,7 +751,17 @@ export class Decorator {
 
     const cursorRanges: Range[] = [];
     for (const position of cursorPositions) {
-      const matchingScopes = scopes.filter((scope) => scope.range.contains(position));
+      // Check if cursor is inside scope or at its boundaries (start or end)
+      // Range.contains() uses exclusive end, so we also check if position equals start or end
+      const matchingScopes = scopes.filter((scope) => {
+        const isInside = scope.range.contains(position);
+        const isAtStart = position.line === scope.range.start.line && 
+                          position.character === scope.range.start.character;
+        const isAtEnd = position.line === scope.range.end.line && 
+                        position.character === scope.range.end.character;
+        return isInside || isAtStart || isAtEnd;
+      });
+      
       if (matchingScopes.length === 0) {
         continue;
       }
