@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.2] - 2026-01-19
+
+### Fixed
+- Selection highlight visibility in code blocks and frontmatter
+  - Fixed issue where text selections inside code blocks appeared invisible due to opaque background decorations
+  - Added explicit selection overlay decoration using `editor.selectionBackground` to ensure selections remain visible
+  - Code block and frontmatter backgrounds are now preserved while selection highlights are properly displayed on top
+
 ## [1.9.1] - 2026-01-18
 
 ### Changed
@@ -295,6 +303,7 @@ _No changes documented_
   - Strikethrough
 
 [1.8.0]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.7.4...v1.8.0
+[1.9.2]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.9.1...v1.9.2
 [1.9.1]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.7.4...v1.8.0
