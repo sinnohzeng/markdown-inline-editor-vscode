@@ -267,7 +267,7 @@ describe('Decorator filtering behavior', () => {
     expect(filtered.get('code')?.length).toBe(1);
   });
 
-  it('suppresses code block background decoration in raw state (selection inside code block)', () => {
+  it('keeps code block background and adds selection overlay when selecting inside a code block', () => {
     const text = '```\ncode\n```';
     const decorations: DecorationRange[] = [
       // Background for the whole code block (fenceStart..closingFenceEnd)
@@ -284,10 +284,11 @@ describe('Decorator filtering behavior', () => {
     const selection = new Selection(new Position(1, 1), new Position(1, 3));
     const filtered = filterDecorationsForSelection(text, decorations, [[0, 12]], selection);
 
-    // In raw state, we should show the original markdown (including fences),
-    // and avoid applying the opaque background decoration that can hide selection.
-    expect(filtered.has('codeBlock')).toBe(false);
+    // In raw state, we show the original markdown (including fences),
+    // but keep the background and explicitly overlay selection color so it's visible.
+    expect(filtered.get('codeBlock')?.length).toBe(1);
     expect(filtered.has('hide')).toBe(false);
+    expect(filtered.get('selectionOverlay' as DecorationType)?.length).toBe(1);
   });
 
   it('keeps code block background decoration when selection is outside the code block', () => {

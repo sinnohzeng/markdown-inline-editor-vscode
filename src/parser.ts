@@ -41,6 +41,8 @@ export interface ParseResult {
 export type DecorationType =
   | 'hide'
   | 'transparent'
+  // Selection overlay used by the Decorator (not emitted by the parser)
+  | 'selectionOverlay'
   | 'bold'
   | 'italic'
   | 'boldItalic'

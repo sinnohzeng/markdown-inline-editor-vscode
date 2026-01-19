@@ -10,6 +10,7 @@ import {
   CodeDecorationType,
   CodeBlockDecorationType,
   CodeBlockLanguageDecorationType,
+  SelectionOverlayDecorationType,
   HeadingDecorationType,
   Heading1DecorationType,
   Heading2DecorationType,
@@ -116,6 +117,7 @@ export class Decorator {
   private codeDecorationType = CodeDecorationType();
   private codeBlockDecorationType = CodeBlockDecorationType();
   private codeBlockLanguageDecorationType = CodeBlockLanguageDecorationType(this.getCodeBlockLanguageOpacity());
+  private selectionOverlayDecorationType = SelectionOverlayDecorationType();
   private headingDecorationType = HeadingDecorationType();
   private heading1DecorationType = Heading1DecorationType();
   private heading2DecorationType = Heading2DecorationType();
@@ -786,6 +788,7 @@ export class Decorator {
 
     const filtered = new Map<DecorationType, Range[]>();
     const ghostFaintRanges: Range[] = [];
+    const selectionOverlayRanges: Range[] = [];
 
     const selectionOrCursorOverlaps = (range: Range): boolean => {
       const selectionOverlaps = selectedRanges.some((selection) => {
@@ -803,15 +806,16 @@ export class Decorator {
       if (!range) continue;
       const isActiveLine = activeLines.size > 0 && activeLines.has(range.start.line);
 
-      // Code blocks and frontmatter use full-line background decorations.
-      // When we enter Raw state (cursor/selection intersects the scope),
-      // keeping those opaque backgrounds can make VS Code's native selection highlight
-      // appear invisible. In Raw state we prefer the unstyled editor surface anyway,
-      // so we suppress these background decorations.
-      if (decoration.type === 'codeBlock' || decoration.type === 'frontmatter') {
-        const intersectsRaw = this.rangeIntersectsAny(range, rawRanges);
-        if (intersectsRaw) {
-          continue;
+      // Code blocks and frontmatter use opaque, whole-line backgrounds.
+      // On some themes, VS Code's native selection highlight is drawn "under" those
+      // backgrounds, making selections appear invisible. We keep the background,
+      // but add an explicit selection overlay decoration on top for the intersection.
+      if ((decoration.type === 'codeBlock' || decoration.type === 'frontmatter') && selectedRanges.length > 0) {
+        for (const selection of selectedRanges) {
+          const intersection = range.intersection(selection);
+          if (intersection !== undefined) {
+            selectionOverlayRanges.push(intersection);
+          }
         }
       }
 
@@ -882,6 +886,10 @@ export class Decorator {
       filtered.set('ghostFaint' as DecorationType, ghostFaintRanges);
     }
 
+    if (selectionOverlayRanges.length > 0) {
+      filtered.set('selectionOverlay' as DecorationType, this.mergeRanges(selectionOverlayRanges));
+    }
+
     return filtered;
   }
 
@@ -913,6 +921,8 @@ export class Decorator {
     ['checkboxChecked', this.checkboxCheckedDecorationType],
     ['frontmatter', this.frontmatterDecorationType],
     ['frontmatterDelimiter', this.frontmatterDelimiterDecorationType],
+    // Keep this last so it is applied after backgrounds.
+    ['selectionOverlay', this.selectionOverlayDecorationType],
   ]);
 
   /**

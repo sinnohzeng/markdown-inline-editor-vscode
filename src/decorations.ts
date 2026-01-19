@@ -175,6 +175,19 @@ export function CodeBlockDecorationType() {
 }
 
 /**
+ * Creates a decoration type that overlays VS Code's selection background color.
+ *
+ * This is used to restore visible selection highlight on top of opaque
+ * block background decorations (e.g. fenced code blocks, frontmatter),
+ * in themes where the block background can visually overpower the native selection.
+ */
+export function SelectionOverlayDecorationType() {
+  return window.createTextEditorDecorationType({
+    backgroundColor: new ThemeColor('editor.selectionBackground'),
+  });
+}
+
+/**
  * Creates a decoration type for YAML frontmatter styling.
  * 
  * Highlights the entire frontmatter block (including --- delimiters) with a background color,
