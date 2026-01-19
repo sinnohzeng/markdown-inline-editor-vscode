@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.1] - 2026-01-18
+
+### Changed
+- Improved README documentation with better organization and visual demonstrations
+  - Reorganized layout for better flow and readability
+  - Added syntax shadowing and code blocks screenshots
+  - Enhanced demo section with side-by-side image comparisons
+
 ## [1.9.0] - 2026-01-18
 
 ### Added
@@ -287,6 +295,7 @@ _No changes documented_
   - Strikethrough
 
 [1.8.0]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.7.4...v1.8.0
+[1.9.1]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.7.4...v1.8.0
 [1.7.4]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.7.3...v1.7.4
