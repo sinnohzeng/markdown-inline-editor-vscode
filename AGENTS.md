@@ -75,33 +75,46 @@
 
 **Releasing a Version (Conventional Commits & SemVer)**
 
-- **Determine the version bump** (major/minor/patch) following [SemVer](https://semver.org/) and [Conventional Commits](https://www.conventionalcommits.org/):
-  - `feat`: **minor** version (or **major** if breaking)
-  - `fix`: **patch** version
-  - `BREAKING CHANGE`: **major** version
-- **Update `package.json`** version field (e.g., `1.3.6` → `1.4.0` for feature, `2.0.0` for breaking change).
-- **Update `CHANGELOG.md`** with the new version entry:
-  - Add a new section `## [X.Y.Z] - YYYY-MM-DD` at the top
-  - Document all changes using categories: `Added`, `Changed`, `Fixed`, `Removed`, `Deprecated`, `Security`
-  - Update the comparison links at the bottom of the file
-- **Verify feature list in `README.md`** to ensure all current features are accurately documented before each release.
-- **Verify issue list on github** [Github issues](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues)
-- **Build the extension** to verify compilation:
-  ```bash
-  npm run build
-  ```
-- **Commit version bump and changelog** with a conventional commit message:
-  ```bash
-  git commit -am "chore(release): vX.Y.Z"
-  ```
-- **Tag the release** using the new version:
-  ```bash
-  git tag vX.Y.Z
-  ```
-- **Push changes and tag** to the repository:
-  ```bash
-  git push origin main
-  git push origin vX.Y.Z
-  ```
-- **CI/CD publishes** to VS Code Marketplace and OpenVSX automatically for tags beginning with `v`.
-- The release workflow is managed by `.github/workflows/ci.yaml`, which triggers on tags matching `refs/tags/v*`.
+**Release Checklist:**
+
+1. **Determine the version bump** (major/minor/patch) following [SemVer](https://semver.org/) and [Conventional Commits](https://www.conventionalcommits.org/):
+   - `feat`: **minor** version (or **major** if breaking)
+   - `fix`: **patch** version
+   - `BREAKING CHANGE`: **major** version
+
+2. **Run validation and tests:**
+   ```bash
+   npm run lint:docs    # Validate feature file structure
+   npm test             # Run all tests
+   npm run build        # Verify compilation
+   ```
+
+3. **Update `package.json`** version field (e.g., `1.3.6` → `1.4.0` for feature, `2.0.0` for breaking change).
+
+4. **Update `CHANGELOG.md`** with the new version entry:
+   - Add a new section `## [X.Y.Z] - YYYY-MM-DD` at the top
+   - Document all changes using categories: `Added`, `Changed`, `Fixed`, `Removed`, `Deprecated`, `Security`
+   - Update the comparison links at the bottom of the file
+
+5. **Verify documentation:**
+   - Verify feature list in `README.md` to ensure all current features are accurately documented
+   - Verify issue list on github [Github issues](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues)
+
+6. **Commit version bump and changelog** with a conventional commit message:
+   ```bash
+   git commit -am "chore(release): vX.Y.Z"
+   ```
+
+7. **Tag the release** using the new version:
+   ```bash
+   git tag vX.Y.Z
+   ```
+
+8. **Push changes and tag** to the repository:
+   ```bash
+   git push origin main
+   git push origin vX.Y.Z
+   ```
+
+9. **CI/CD publishes** to VS Code Marketplace and OpenVSX automatically for tags beginning with `v`.
+   - The release workflow is managed by `.github/workflows/ci.yaml`, which triggers on tags matching `refs/tags/v*`.
