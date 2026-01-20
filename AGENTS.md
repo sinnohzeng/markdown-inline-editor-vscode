@@ -75,7 +75,14 @@
 
 **Releasing a Version (Conventional Commits & SemVer)**
 
-**Release Checklist:**
+**Quick Release (using Makefile):**
+```bash
+make release-prep              # Validate and check git status
+make release VERSION=1.10.0    # Interactive release (updates version, prompts for CHANGELOG)
+make release-commit VERSION=1.10.0  # Commit and tag (after CHANGELOG is updated)
+```
+
+**Manual Release Checklist:**
 
 1. **Determine the version bump** (major/minor/patch) following [SemVer](https://semver.org/) and [Conventional Commits](https://www.conventionalcommits.org/):
    - `feat`: **minor** version (or **major** if breaking)
