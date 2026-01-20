@@ -885,11 +885,21 @@ export class MarkdownParser {
 
     // Add image decoration for alt text (even if empty)
     if (altStart <= bracketEnd) {
+      const url = node.url || '';
       decorations.push({
         startPos: altStart,
         endPos: bracketEnd,
         type: 'image',
+        url,
       });
+
+      // Image nodes from remark store alt text as a string (no child nodes),
+      // so inline formatting like **bold** and *italic* inside the alt text
+      // is not parsed by the main AST walk. We parse the alt slice separately
+      // and add inline formatting decorations within the alt range.
+      if (altStart < bracketEnd) {
+        this.processInlineFormattingInImageAlt(text, decorations, scopes, altStart, bracketEnd);
+      }
     }
 
     // Hide closing bracket
@@ -903,7 +913,18 @@ export class MarkdownParser {
     const parenStart = text.indexOf('(', bracketEnd);
     if (parenStart !== -1) {
       // Allow for optional space between ] and (
-      if (parenStart === bracketEnd + 1 || (parenStart > bracketEnd + 1 && text.substring(bracketEnd + 1, parenStart).trim().length === 0)) {
+      const between = text.substring(bracketEnd + 1, parenStart);
+      const hasOnlyWhitespaceBetween = between.length > 0 && between.trim().length === 0;
+      if (parenStart === bracketEnd + 1 || hasOnlyWhitespaceBetween) {
+        // Hide whitespace between ] and ( if present
+        if (hasOnlyWhitespaceBetween) {
+          decorations.push({
+            startPos: bracketEnd + 1,
+            endPos: parenStart,
+            type: 'hide',
+          });
+        }
+
         decorations.push({
           startPos: parenStart,
           endPos: parenStart + 1,
@@ -911,7 +932,16 @@ export class MarkdownParser {
         });
 
         const parenEnd = text.indexOf(')', parenStart + 1);
-        if (parenEnd !== -1 && parenEnd < end) {
+        if (parenEnd !== -1 && parenEnd <= end) {
+          const urlStart = parenStart + 1;
+          if (urlStart < parenEnd) {
+            decorations.push({
+              startPos: urlStart,
+              endPos: parenEnd,
+              type: 'hide',
+            });
+          }
+
           decorations.push({
             startPos: parenEnd,
             endPos: parenEnd + 1,
@@ -922,6 +952,123 @@ export class MarkdownParser {
     }
 
     this.addScope(scopes, start, end, 'image');
+  }
+
+  /**
+   * Parses inline markdown inside an image's alt text and emits decorations.
+   *
+   * Remark's mdast `image` node stores `alt` as a plain string (no inline children),
+   * so formatting inside the alt text is not present in the main AST traversal.
+   *
+   * This method parses only the alt slice (fast path + early exits) and maps the
+   * resulting node positions back into the original (normalized) document offsets.
+   */
+  private processInlineFormattingInImageAlt(
+    text: string,
+    decorations: DecorationRange[],
+    scopes: ScopeRange[],
+    altStart: number,
+    altEnd: number
+  ): void {
+    if (altStart >= altEnd) return;
+
+    const altText = text.substring(altStart, altEnd);
+
+    // Fast path: avoid parsing when there are no inline marker characters
+    const hasInlineMarkers =
+      altText.indexOf('*') !== -1 ||
+      altText.indexOf('_') !== -1 ||
+      altText.indexOf('~') !== -1 ||
+      altText.indexOf('`') !== -1;
+    if (!hasInlineMarkers) return;
+
+    let altAst: Root;
+    try {
+      altAst = this.processor.parse(altText) as Root;
+    } catch {
+      return;
+    }
+
+    const ancestorMap = new Map<Node, Node[]>();
+    const absCache = new WeakMap<Node, Node>();
+
+    const toAbsoluteNode = <T extends Node>(node: T): T => {
+      const cached = absCache.get(node);
+      if (cached) return cached as T;
+
+      if (!node.position ||
+          node.position.start.offset === undefined ||
+          node.position.end.offset === undefined) {
+        absCache.set(node, node);
+        return node;
+      }
+
+      const absNode = {
+        ...node,
+        position: {
+          ...node.position,
+          start: {
+            ...node.position.start,
+            offset: altStart + (node.position.start.offset ?? 0),
+          },
+          end: {
+            ...node.position.end,
+            offset: altStart + (node.position.end.offset ?? 0),
+          },
+        },
+      } as T;
+
+      absCache.set(node, absNode as unknown as Node);
+      return absNode;
+    };
+
+    const toAbsoluteAncestors = (ancestors: Node[]): Node[] => ancestors.map(toAbsoluteNode);
+
+    this.visit(altAst, (node: Node, _index: number | undefined, parent: Node | undefined) => {
+      const currentAncestors: Node[] = [];
+      if (parent) {
+        currentAncestors.push(parent);
+        const parentAncestors = ancestorMap.get(parent);
+        if (parentAncestors) {
+          currentAncestors.push(...parentAncestors);
+        }
+      }
+
+      if (currentAncestors.length > 0) {
+        ancestorMap.set(node, currentAncestors);
+      }
+
+      try {
+        switch (node.type) {
+          case 'strong':
+            this.processStrong(
+              toAbsoluteNode(node as Strong),
+              text,
+              decorations,
+              scopes,
+              toAbsoluteAncestors(currentAncestors)
+            );
+            break;
+          case 'emphasis':
+            this.processEmphasis(
+              toAbsoluteNode(node as Emphasis),
+              text,
+              decorations,
+              scopes,
+              toAbsoluteAncestors(currentAncestors)
+            );
+            break;
+          case 'delete':
+            this.processStrikethrough(toAbsoluteNode(node as Delete), text, decorations, scopes);
+            break;
+          case 'inlineCode':
+            this.processInlineCode(toAbsoluteNode(node as InlineCode), text, decorations, scopes);
+            break;
+        }
+      } catch {
+        // Be conservative: never fail the main image parsing because the alt slice is malformed.
+      }
+    });
   }
 
   /**

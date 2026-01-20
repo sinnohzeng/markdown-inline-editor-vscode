@@ -267,23 +267,38 @@ export const Heading6DecorationType = () => createHeadingDecoration(6);
 /**
  * Creates a decoration type for link styling.
  * 
+ * Sets cursor to pointer on hover to indicate clickability.
+ * 
  * @returns {vscode.TextEditorDecorationType} A decoration type for links
  */
 export function LinkDecorationType() {
   return window.createTextEditorDecorationType({
     color: new ThemeColor('textLink.foreground'),
     textDecoration: 'underline',
+    cursor: 'pointer', // Show pointer cursor on hover
+    after: {
+      contentText: ' 🔗',
+      color: new ThemeColor('textLink.foreground'),
+    },
   });
 }
 
 /**
  * Creates a decoration type for image styling.
  * 
+ * Adds an image icon after the image alt text to visually indicate it's an image.
+ * Sets cursor to pointer on hover to indicate clickability (same as links).
  * @returns {vscode.TextEditorDecorationType} A decoration type for images
  */
 export function ImageDecorationType() {
   return window.createTextEditorDecorationType({
     color: new ThemeColor('textLink.foreground'),
+    cursor: 'pointer', // Show pointer cursor on hover (same as links)
+    textDecoration: 'underline; text-decoration-style: dashed; text-decoration-thickness: 1px;',
+    after: {
+      contentText: ' ⬔',
+      color: new ThemeColor('textLink.foreground'),
+    },
   });
 }
 

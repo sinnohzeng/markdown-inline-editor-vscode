@@ -3,11 +3,14 @@ import { MarkdownParser } from './parser';
 import { mapNormalizedToOriginal } from './position-mapping';
 
 /**
- * Provides clickable links for markdown documents.
+ * Provides clickable links and images for markdown documents.
  * 
  * This class implements VS Code's DocumentLinkProvider to make markdown links
- * clickable. It parses markdown links and creates DocumentLink objects that
- * VS Code can render as clickable.
+ * and images clickable. It parses markdown links/images and creates DocumentLink
+ * objects that VS Code can render as clickable.
+ * 
+ * - Links: Click to navigate to URL or anchor
+ * - Images: Click to open image file in VS Code's image viewer
  */
 export class MarkdownLinkProvider implements vscode.DocumentLinkProvider {
   private parser = new MarkdownParser();
@@ -44,14 +47,14 @@ export class MarkdownLinkProvider implements vscode.DocumentLinkProvider {
 
     // Find all link decorations with URLs
     for (const decoration of decorations) {
-      if (decoration.type === 'link' && decoration.url) {
+      if ((decoration.type === 'link' || decoration.type === 'image') && decoration.url) {
         const url = decoration.url;
         
         // Map normalized positions to original document positions (handles CRLF -> LF normalization)
         const mappedStart = mapNormalizedToOriginal(decoration.startPos, text);
         const mappedEnd = mapNormalizedToOriginal(decoration.endPos, text);
         
-        // Create range for the link text (not the URL)
+        // Create range for the link/image text (not the URL)
         const startPos = document.positionAt(mappedStart);
         const endPos = document.positionAt(mappedEnd);
         const range = new vscode.Range(startPos, endPos);
@@ -59,7 +62,17 @@ export class MarkdownLinkProvider implements vscode.DocumentLinkProvider {
         // Create document link
         let target: vscode.Uri | undefined;
 
-        if (url.startsWith('#')) {
+        if (decoration.type === 'image') {
+          // For images, resolve the image file path
+          if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+            // External image URL - open in browser
+            target = vscode.Uri.parse(url);
+          } else {
+            // Local image file - resolve relative to document
+            const relative = url.startsWith('/') ? url.slice(1) : url;
+            target = vscode.Uri.joinPath(document.uri, '..', relative);
+          }
+        } else if (url.startsWith('#')) {
           // Internal anchor link - use command to navigate within the same document
           const anchor = url.substring(1);
           target = vscode.Uri.parse(`command:markdown-inline-editor.navigateToAnchor?${encodeURIComponent(JSON.stringify([anchor, document.uri.toString()]))}`);

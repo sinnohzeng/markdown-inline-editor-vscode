@@ -86,10 +86,20 @@
           "maximum": 1,
           "description": "Opacity for code block language identifiers",
           "markdownDescription": "Opacity of code block language identifiers (0.0-1.0)."
+        },
+        "markdownInlineEditor.links.singleClickOpen": {
+          "type": "boolean",
+          "default": false,
+          "description": "Open links and images with single click",
+          "markdownDescription": "Single-click to open links and image links (no Ctrl+Click needed). May interfere with text selection."
         }
       }
     }
   },
+  "extensionRecommendations": [
+    "yzhang.markdown-all-in-one",
+    "MermaidChart.vscode-mermaid-chart"
+  ],
   "scripts": {
     "lint": "eslint .",
     "lint:docs": "node scripts/validate-feature-outline.js",

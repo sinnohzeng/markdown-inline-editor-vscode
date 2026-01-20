@@ -161,9 +161,9 @@ UAT-CHECK()
 [**Bold** and *italic* combined](https://example.com) 
 UAT-CHECK()
 
-![**Bold** alt text](image.png) 
+![**Bold** alt text](test.png) 
 UAT-CHECK()
-![*Italic* alt text](image.png) 
+![*Italic* alt text](../test.png) 
 UAT-CHECK()
 
 `**bold** inside code` (should show literal asterisks) 

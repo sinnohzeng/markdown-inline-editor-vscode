@@ -17,12 +17,15 @@ describe('MarkdownParser - Images', () => {
       expect(result.some(d => d.type === 'hide' && d.startPos === 5)).toBe(true); // ]
       expect(result.some(d => d.type === 'hide' && d.startPos === 6)).toBe(true); // (
       expect(result.some(d => d.type === 'hide' && d.startPos === 10)).toBe(true); // )
+      // Should hide URL content
+      expect(result.some(d => d.type === 'hide' && d.startPos === 7 && d.endPos === 10)).toBe(true); // url
       
       // Should style alt text as image
       expect(result).toContainEqual({
         startPos: 2,
         endPos: 5,
-        type: 'image'
+        type: 'image',
+        url: 'url',
       });
     });
   });
@@ -123,6 +126,38 @@ describe('MarkdownParser - Images', () => {
       // Should still hide delimiters
       expect(result.some(d => d.type === 'hide')).toBe(true);
       // May or may not have image decoration for empty alt
+    });
+  });
+
+  describe('image with formatting in alt', () => {
+    it('should preserve bold formatting inside image alt text', () => {
+      const markdown = '![**Bold** alt](image.png)';
+      const result = parser.extractDecorations(markdown);
+
+      // The image alt text should carry the URL for hover/click behaviors
+      const imageDec = result.find(d => d.type === 'image');
+      expect(imageDec).toBeDefined();
+      expect(imageDec?.url).toBe('image.png');
+
+      // Bold markers should be hidden and bold content styled
+      expect(result.some(d => d.type === 'hide' && d.startPos === 2 && d.endPos === 4)).toBe(true); // opening **
+      expect(result.some(d => d.type === 'bold' && d.startPos === 4 && d.endPos === 8)).toBe(true); // Bold
+      expect(result.some(d => d.type === 'hide' && d.startPos === 8 && d.endPos === 10)).toBe(true); // closing **
+
+      // Image path should be hidden (including parentheses and content)
+      expect(result.some(d => d.type === 'hide' && d.startPos === 15 && d.endPos === 16)).toBe(true); // (
+      expect(result.some(d => d.type === 'hide' && d.startPos === 16 && d.endPos === 25)).toBe(true); // image.png
+      expect(result.some(d => d.type === 'hide' && d.startPos === 25 && d.endPos === 26)).toBe(true); // )
+    });
+
+    it('should preserve italic formatting inside image alt text', () => {
+      const markdown = '![*Italic* alt text](image.png)';
+      const result = parser.extractDecorations(markdown);
+
+      // Italic markers should be hidden and italic content styled
+      expect(result.some(d => d.type === 'hide' && d.startPos === 2 && d.endPos === 3)).toBe(true); // opening *
+      expect(result.some(d => d.type === 'italic' && d.startPos === 3 && d.endPos === 9)).toBe(true); // Italic
+      expect(result.some(d => d.type === 'hide' && d.startPos === 9 && d.endPos === 10)).toBe(true); // closing *
     });
   });
 });

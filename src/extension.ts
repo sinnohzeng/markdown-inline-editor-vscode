@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
 import { Decorator } from './decorator';
 import { MarkdownLinkProvider } from './link-provider';
+import { MarkdownImageHoverProvider } from './image-hover-provider';
+import { MarkdownLinkHoverProvider } from './link-hover-provider';
+import { LinkClickHandler } from './link-click-handler';
 import { normalizeAnchorText } from './position-mapping';
 
 /**
@@ -11,6 +14,64 @@ import { normalizeAnchorText } from './position-mapping';
 function getDiffViewApplyDecorationsSetting(): boolean {
   const config = vscode.workspace.getConfiguration('markdownInlineEditor');
   return config.get<boolean>('defaultBehaviors.diffView.applyDecorations', false);
+}
+
+/**
+ * Checks if a recommended extension is installed and optionally shows a notification.
+ * 
+ * @param extensionId - The extension ID (e.g., 'yzhang.markdown-all-in-one')
+ * @param context - The extension context for storing state
+ * @param showNotification - Whether to show a notification if not installed (default: false)
+ * @returns True if the extension is installed, false otherwise
+ */
+function checkRecommendedExtension(
+  extensionId: string,
+  context: vscode.ExtensionContext,
+  showNotification: boolean = false
+): boolean {
+  const extension = vscode.extensions.getExtension(extensionId);
+  const isInstalled = extension !== undefined;
+  
+  if (!isInstalled && showNotification) {
+    const notificationKey = `recommendationShown.${extensionId}`;
+    const hasShownBefore = context.globalState.get<boolean>(notificationKey, false);
+    
+    if (!hasShownBefore) {
+      const extensionName = extensionId.split('.').pop() || extensionId;
+      vscode.window.showInformationMessage(
+        `Enhance your Markdown workflow: Consider installing "${extensionName}"`,
+        'Install',
+        'Dismiss'
+      ).then((selection) => {
+        if (selection === 'Install') {
+          vscode.commands.executeCommand('workbench.extensions.installExtension', extensionId);
+        }
+        // Mark as shown regardless of user choice
+        context.globalState.update(notificationKey, true);
+      });
+    }
+  }
+  
+  return isInstalled;
+}
+
+/**
+ * Checks for recommended extensions and shows notifications if needed.
+ * Only shows each recommendation once per user.
+ * 
+ * @param context - The extension context
+ */
+function checkRecommendedExtensions(context: vscode.ExtensionContext): void {
+  // List of recommended extension IDs
+  const recommendedExtensions = [
+    'yzhang.markdown-all-in-one',
+    'MermaidChart.vscode-mermaid-chart'
+  ];
+  
+  // Check each extension (notifications are shown only once per extension)
+  recommendedExtensions.forEach((extensionId) => {
+    checkRecommendedExtension(extensionId, context, true);
+  });
 }
 
 /**
@@ -38,12 +99,34 @@ export function activate(context: vscode.ExtensionContext) {
   
   decorator.setActiveEditor(vscode.window.activeTextEditor);
 
+  // Check for recommended extensions (shows notifications if not installed)
+  checkRecommendedExtensions(context);
+
   // Register link provider for clickable markdown links
   const linkProvider = new MarkdownLinkProvider();
   const linkProviderDisposable = vscode.languages.registerDocumentLinkProvider(
     { language: 'markdown', scheme: 'file' },
     linkProvider
   );
+
+  // Register hover provider for image previews on hover
+  const imageHoverProvider = new MarkdownImageHoverProvider();
+  const imageHoverProviderDisposable = vscode.languages.registerHoverProvider(
+    { language: 'markdown', scheme: 'file' },
+    imageHoverProvider
+  );
+
+  // Register hover provider for link URL previews
+  const linkHoverProvider = new MarkdownLinkHoverProvider();
+  const linkHoverProviderDisposable = vscode.languages.registerHoverProvider(
+    { language: 'markdown', scheme: 'file' },
+    linkHoverProvider
+  );
+
+  // Setup single-click link handler (configurable)
+  const linkClickHandler = new LinkClickHandler();
+  const singleClickEnabled = vscode.workspace.getConfiguration('markdownInlineEditor').get<boolean>('links.singleClickOpen', false);
+  linkClickHandler.setEnabled(singleClickEnabled);
 
   // Register command for toggling markdown decorations
   const toggleDecorationsCommand = vscode.commands.registerCommand(
@@ -122,6 +205,11 @@ export function activate(context: vscode.ExtensionContext) {
     if (event.affectsConfiguration('markdownInlineEditor.decorations.codeBlockLanguageOpacity')) {
       decorator.recreateCodeBlockLanguageDecorationType();
     }
+
+    if (event.affectsConfiguration('markdownInlineEditor.links.singleClickOpen')) {
+      const singleClickEnabled = vscode.workspace.getConfiguration('markdownInlineEditor').get<boolean>('links.singleClickOpen', false);
+      linkClickHandler.setEnabled(singleClickEnabled);
+    }
   });
 
   // Listen for theme changes to update code decoration colors
@@ -135,9 +223,12 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(changeConfiguration);
   context.subscriptions.push(changeColorTheme);
   context.subscriptions.push(linkProviderDisposable);
+  context.subscriptions.push(imageHoverProviderDisposable);
+  context.subscriptions.push(linkHoverProviderDisposable);
   context.subscriptions.push(toggleDecorationsCommand);
   context.subscriptions.push(navigateToAnchorCommand);
   context.subscriptions.push({ dispose: () => decorator.dispose() });
+  context.subscriptions.push({ dispose: () => linkClickHandler.dispose() });
 }
 
 /**
