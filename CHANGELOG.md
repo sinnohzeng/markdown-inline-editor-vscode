@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-01-19
+
+### Added
+- Makefile for release automation
+  - `make validate` - Run all validation checks (docs, tests, build)
+  - `make release-prep` - Prepare for release with validation
+  - `make release VERSION=X.Y.Z` - Interactive release creation
+  - `make release-commit VERSION=X.Y.Z` - Commit and tag release
+  - Simplifies release process and ensures all validation steps are run
+
+### Changed
+- Enhanced release checklist in AGENTS.md with step-by-step validation
+- Improved release documentation with Makefile quick reference
+
+### Fixed
+- Fixed feature file structure validation for `image-ux-improvements.md`
+  - Restructured to match required feature file format
+  - Added all required sections: Overview, Implementation, Acceptance Criteria, Notes, Examples
+
 ## [1.10.0] - 2026-01-19
 
 ### Added
@@ -338,6 +357,7 @@ _No changes documented_
   - Strikethrough
 
 [1.8.0]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.7.4...v1.8.0
+[1.11.0]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.9.2...v1.10.0
 [1.9.2]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.9.1...v1.9.2
 [1.9.1]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.9.0...v1.9.1
