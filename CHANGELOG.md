@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-01-19
+
+### Added
+- Image hover preview functionality
+  - Hover over image alt text to see image preview with size constraints (max 400x300px)
+  - Shows image URL and configuration status in hover tooltip
+  - Supports absolute paths, relative paths, and external URLs
+  - Proper security handling for file vs. remote URIs
+- Link hover functionality
+  - Hover over links to see target URL
+  - Shows configuration status for single-click navigation
+- Single-click navigation for links and images (optional, disabled by default)
+  - New configuration setting `markdownInlineEditor.links.singleClickOpen`
+  - When enabled, single-click opens links/images without requiring Ctrl+Click
+  - Works with anchor links, external URLs, and relative file paths
+  - Note: May interfere with text selection, so disabled by default
+- Shared hover utilities (`hover-utils.ts`)
+  - Intelligent caching with LRU eviction (max 20 entries)
+  - Image URL resolution supporting multiple path formats
+  - Diff view handling integration
+- Comprehensive test coverage
+  - 57+ passing tests across hover providers, click handler, and utilities
+  - Tests for caching, URL resolution, cancellation handling, and edge cases
+
+### Changed
+- Image decorations now show pointer cursor on hover (consistent with links)
+- Image alt text supports inline formatting (bold, italic) with proper decoration
+- Link decorations show link icon (🔗) after link text
+- Improved image URL hiding in parser
+
+### Fixed
+- Image alt text inline formatting now properly renders bold/italic decorators
+- Image hover respects diff view configuration settings
+- Proper cancellation token handling in all hover providers
+
 ## [1.9.2] - 2026-01-19
 
 ### Fixed
@@ -303,6 +338,7 @@ _No changes documented_
   - Strikethrough
 
 [1.8.0]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.7.4...v1.8.0
+[1.10.0]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.9.2...v1.10.0
 [1.9.2]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.9.1...v1.9.2
 [1.9.1]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.8.0...v1.9.0

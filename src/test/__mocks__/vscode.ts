@@ -220,7 +220,7 @@ export const MarkdownString = class {
 
 export const Hover = class {
   constructor(
-    public contents: MarkdownString | string,
+    public contents: typeof MarkdownString | string,
     public range?: any
   ) {}
 };
