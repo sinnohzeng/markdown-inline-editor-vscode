@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.11.1] - 2026-01-22
+
+### Fixed
+- Prevent markdown formatting decorations inside code blocks
+  - Fixed issue where markdown syntax (bold, italic, etc.) was incorrectly decorated inside code blocks
+  - Code blocks now properly exclude all markdown formatting decorations
+
+### Changed
+- Optimize VSIX package size by excluding dev files
+- Update architecture documentation to reflect refactored structure
+
+### Fixed
+- Correct markdown table formatting in UAT template
+
 ## [1.11.0] - 2026-01-19
 
 ### Added
@@ -357,6 +371,7 @@ _No changes documented_
   - Strikethrough
 
 [1.8.0]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.7.4...v1.8.0
+[1.11.1]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.11.0...v1.11.1
 [1.11.0]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.9.2...v1.10.0
 [1.9.2]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.9.1...v1.9.2
