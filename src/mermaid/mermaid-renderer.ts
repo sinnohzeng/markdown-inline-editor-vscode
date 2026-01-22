@@ -15,9 +15,11 @@ let resolveSvg: ((svg: string) => void) | undefined;
 // Memoization cache for decorations
 const decorationCache = new Map<string, Promise<string>>();
 
-function getWebviewContent(): string {
-  // Use Mermaid v11 from CDN (like Markless uses v8, but we use v11)
-  const mermaidScriptUri = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri): string {
+  // Use local Mermaid bundle (no internet required)
+  const mermaidScriptUri = webview.asWebviewUri(
+    vscode.Uri.joinPath(extensionUri, 'assets', 'mermaid', 'mermaid.esm.min.mjs')
+  );
   
   return `<!DOCTYPE html>
 <html lang="en">
@@ -89,8 +91,20 @@ class MermaidWebviewViewProvider implements vscode.WebviewViewProvider {
 
   resolveWebviewView(webviewView: vscode.WebviewView): void {
     console.log('[Mermaid Renderer] Resolving webview view');
-    webviewView.webview.options = { enableScripts: true };
-    webviewView.webview.html = getWebviewContent();
+    if (!extensionContext) {
+      console.error('[Mermaid Renderer] Extension context not available');
+      return;
+    }
+    
+    // Configure webview to allow access to local assets
+    webviewView.webview.options = {
+      enableScripts: true,
+      localResourceRoots: [
+        vscode.Uri.joinPath(extensionContext.extensionUri, 'assets')
+      ]
+    };
+    
+    webviewView.webview.html = getWebviewContent(webviewView.webview, extensionContext.extensionUri);
 
     // Store reference BEFORE setting up handlers (like Markless does)
     setWebviewView(webviewView);
