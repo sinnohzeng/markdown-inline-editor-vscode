@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
 import { ColorThemeKind } from 'vscode';
 import * as cheerio from 'cheerio';
+import * as fs from 'fs';
+import * as path from 'path';
+import { createHash } from 'crypto';
 
 type MermaidRenderOptions = {
   theme: 'default' | 'dark';
@@ -15,6 +18,9 @@ let resolveSvg: ((svg: string) => void) | undefined;
 
 // Memoization cache for decorations
 const decorationCache = new Map<string, Promise<string>>();
+
+// Store most recent layout metrics for gantt verification (included in saved HTML)
+let lastGanttLayoutMetrics: any = null;
 
 function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri): string {
   // Use local Mermaid bundle (no internet required)
@@ -32,6 +38,51 @@ function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
     import mermaid from '${mermaidScriptUri}';
     
     const vscode = acquireVsCodeApi();
+
+    function getDiagramType(source) {
+      const firstNonEmptyLine = source
+        .split(/\\r?\\n/)
+        .map((l) => l.trim())
+        .find((l) => l.length > 0);
+      if (!firstNonEmptyLine) return 'unknown';
+      return firstNonEmptyLine.split(/\\s+/)[0] || 'unknown';
+    }
+
+    function measureLayout() {
+      // We log multiple metrics because different ones can be 0 depending on visibility/layout.
+      const bodyRect = document.body ? document.body.getBoundingClientRect() : null;
+      const docElRect = document.documentElement ? document.documentElement.getBoundingClientRect() : null;
+
+      // Create an offscreen container with explicit width to test whether layout width is available.
+      const probe = document.createElement('div');
+      probe.id = 'mdInline-mermaid-width-probe';
+      probe.style.position = 'absolute';
+      probe.style.left = '-10000px';
+      probe.style.top = '0';
+      probe.style.width = '2000px';
+      probe.style.height = '1px';
+      probe.style.visibility = 'hidden';
+      document.body?.appendChild(probe);
+      const probeRect = probe.getBoundingClientRect();
+      probe.remove();
+
+      return {
+        visibilityState: document.visibilityState,
+        hidden: document.hidden,
+        windowInnerWidth: window.innerWidth,
+        windowInnerHeight: window.innerHeight,
+        documentElementClientWidth: document.documentElement?.clientWidth ?? null,
+        documentElementClientHeight: document.documentElement?.clientHeight ?? null,
+        bodyClientWidth: document.body?.clientWidth ?? null,
+        bodyClientHeight: document.body?.clientHeight ?? null,
+        bodyRectWidth: bodyRect ? bodyRect.width : null,
+        bodyRectHeight: bodyRect ? bodyRect.height : null,
+        documentElementRectWidth: docElRect ? docElRect.width : null,
+        documentElementRectHeight: docElRect ? docElRect.height : null,
+        probeRectWidth: probeRect.width,
+        probeRectHeight: probeRect.height,
+      };
+    }
     
     window.addEventListener('message', async (event) => {
       const data = event.data;
@@ -40,15 +91,31 @@ function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
         console.warn('[Mermaid Renderer] Invalid message received:', data);
         return;
       }
+
+      const diagramType = getDiagramType(data.source);
       
       console.log('[Mermaid Renderer] Received render request:', {
         sourceLength: data.source?.length || 0,
         sourcePreview: data.source?.substring(0, 100) + (data.source && data.source.length > 100 ? '...' : ''),
+        diagramType,
         darkMode: data.darkMode,
         fontFamily: data.fontFamily,
       });
       
       try {
+        // Verification log: gantt rendering depends on available layout width.
+        // If the webview is effectively "layout-hidden" the width can be 0, producing broken gantt SVGs.
+        if (diagramType === 'gantt') {
+          const layout = measureLayout();
+          console.log('[Mermaid Renderer] Gantt layout metrics (pre-render):', layout);
+          vscode.postMessage({
+            debug: {
+              kind: 'gantt-layout-pre-render',
+              layout,
+            },
+          });
+        }
+
         // Initialize Mermaid with theme and font settings
         mermaid.initialize({
           theme: data.darkMode ? 'dark' : 'default',
@@ -59,12 +126,36 @@ function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
         
         console.log('[Mermaid Renderer] Starting render...');
         // Render the diagram - Mermaid v11 returns { svg } from render()
-        const { svg } = await mermaid.render('mermaid', data.source);
+        // Gantt depends on parentElement.offsetWidth; when webview layout width is 0,
+        // create a hidden container with explicit width to give Mermaid a real layout width.
+        let svg;
+        let renderContainer;
+        const renderId = 'mermaid-' + Date.now();
+        if (diagramType === 'gantt') {
+          renderContainer = document.createElement('div');
+          renderContainer.style.position = 'absolute';
+          renderContainer.style.left = '-10000px';
+          renderContainer.style.top = '0';
+          renderContainer.style.width = '2000px';
+          renderContainer.style.height = '1px';
+          renderContainer.style.visibility = 'hidden';
+          document.body?.appendChild(renderContainer);
+        }
+
+        try {
+          const result = await mermaid.render(renderId, data.source, renderContainer);
+          svg = result.svg;
+        } finally {
+          renderContainer?.remove();
+        }
         
         console.log('[Mermaid Renderer] Render successful:', {
           svgLength: svg.length,
           svgPreview: svg.substring(0, 200) + (svg.length > 200 ? '...' : ''),
         });
+        
+        // Print full SVG to console for debugging
+        console.log('[Mermaid Renderer] Full SVG from mermaid.render():', svg);
         
         // Send SVG string back
         vscode.postMessage(svg);
@@ -122,6 +213,17 @@ class MermaidWebviewViewProvider implements vscode.WebviewViewProvider {
         return;
       }
 
+      // Debug/verification messages from the webview (do not resolve the render promise)
+      if (message && typeof message === 'object' && message.debug) {
+        console.log('[Mermaid Renderer] Webview debug:', message.debug);
+        
+        // Store layout metrics for gantt charts (for verification in saved HTML)
+        if (message.debug.kind === 'gantt-layout-pre-render' && message.debug.layout) {
+          lastGanttLayoutMetrics = message.debug.layout;
+        }
+        return;
+      }
+
       if (message && message.error) {
         console.error('[Mermaid Renderer] Render failed:', message.error);
         if (resolveSvg) {
@@ -146,6 +248,8 @@ class MermaidWebviewViewProvider implements vscode.WebviewViewProvider {
           svgLength: message.length,
           svgPreview: message.substring(0, 200) + (message.length > 200 ? '...' : ''),
         });
+        // Print full SVG to console for debugging
+        console.log('[Mermaid Renderer] Full SVG received from webview:', message);
         resolveSvg(message);
         resolveSvg = undefined;
       }
@@ -238,6 +342,9 @@ export async function renderMermaidSvgNatural(
   // Request SVG without processing (get natural dimensions)
   const svgString = await requestSvg({ source, darkMode, fontFamily: options.fontFamily });
   
+  // Print full SVG to console for debugging
+  console.log('[Mermaid Renderer] Full SVG from renderMermaidSvgNatural:', svgString);
+  
   // Return raw SVG without height processing
   return svgString;
 }
@@ -325,8 +432,10 @@ function processSvg(svgString: string, height: number): string {
   }
 
   // Get original dimensions from height attribute or viewBox
+  // Note: width might be "100%" which we need to handle
+  const widthAttr = svgNode.attr('width') || '0';
   let originalHeight = parseFloat(svgNode.attr('height') || '0');
-  let originalWidth = parseFloat(svgNode.attr('width') || '0');
+  let originalWidth = widthAttr === '100%' ? 0 : parseFloat(widthAttr) || 0;
   
   // If height/width not in attributes, try viewBox
   if ((originalHeight === 0 || originalWidth === 0) && svgNode.attr('viewBox')) {
@@ -343,21 +452,112 @@ function processSvg(svgString: string, height: number): string {
     }
   }
   
-  const originalMaxWidth = parseFloat(svgNode.css('max-width') || '0');
-  
-  // Calculate max-width based on desired height and original aspect ratio
-  // Use width if max-width is not available
-  const baseWidth = originalMaxWidth > 0 ? originalMaxWidth : originalWidth;
-  const maxWidth = baseWidth > 0 && originalHeight > 0
-    ? (baseWidth * height) / originalHeight
-    : undefined;
-
-  // Adjust SVG attributes
-  if (maxWidth !== undefined) {
-    svgNode.css('max-width', `${maxWidth}px`);
+  // Fix invalid viewBox with zero width (bug in Mermaid gantt charts)
+  // IMPORTANT: Preserve the original viewBox origin (min-x, min-y) to avoid mirroring
+  const currentViewBox = svgNode.attr('viewBox');
+  if (currentViewBox) {
+    const viewBoxParts = currentViewBox.split(/\s+/);
+    if (viewBoxParts.length >= 4) {
+      const viewBoxMinX = parseFloat(viewBoxParts[0]) || 0;
+      const viewBoxMinY = parseFloat(viewBoxParts[1]) || 0;
+      const viewBoxWidth = parseFloat(viewBoxParts[2]) || 0;
+      const viewBoxHeight = parseFloat(viewBoxParts[3]) || 0;
+      
+      // If viewBox width is 0, fix it by using calculated width or minimum
+      if (viewBoxWidth === 0 && viewBoxHeight > 0) {
+        // Try to get width from SVG content bounds, or use a calculated width
+        let fixedWidth = originalWidth;
+        
+        // If we still don't have a width, calculate from aspect ratio or use minimum
+        if (fixedWidth === 0) {
+          // For gantt charts, we need a wider viewBox to accommodate the content
+          // Gantt charts often have content that extends beyond the initial viewBox
+          // Use a wider aspect ratio (at least 3:1) to ensure content fits
+          // Also account for potential negative coordinates by using a larger width
+          fixedWidth = Math.max(600, viewBoxHeight * 3);
+        }
+        
+        // Fix the viewBox attribute - preserve original origin coordinates
+        // For gantt charts with negative coordinates, we might need to adjust min-x
+        // But to avoid mirroring, we'll keep the original origin
+        const fixedViewBox = `${viewBoxMinX} ${viewBoxMinY} ${fixedWidth} ${viewBoxHeight}`;
+        svgNode.attr('viewBox', fixedViewBox);
+        
+        // Always update originalWidth and width attribute when fixing viewBox
+        // This ensures we have valid dimensions for later calculations
+        originalWidth = fixedWidth;
+        // Remove percentage-based width and set explicit pixel value
+        svgNode.attr('width', `${fixedWidth}`);
+        
+        console.log('[Mermaid Renderer] Fixed invalid viewBox:', {
+          original: currentViewBox,
+          fixed: fixedViewBox,
+          preservedOrigin: `${viewBoxMinX}, ${viewBoxMinY}`,
+          fixedWidth,
+        });
+      }
+    }
   }
+  
+  // Calculate width from aspect ratio using height as the limiting factor
+  // Formula: newWidth = (originalWidth / originalHeight) * limitingHeight
+  // This maintains aspect ratio for both wide and tall charts
+  // Use viewBox dimensions if available, as they're more reliable
+  let calculatedWidth: number | undefined;
+  let aspectRatio: number | undefined;
+  
+  // Get final dimensions from viewBox if available (after any fixes)
+  // Re-read viewBox after potential fix to ensure we have the latest value
+  const finalViewBox = svgNode.attr('viewBox');
+  if (finalViewBox) {
+    const viewBoxParts = finalViewBox.split(/\s+/);
+    if (viewBoxParts.length >= 4) {
+      const viewBoxWidth = parseFloat(viewBoxParts[2]) || 0;
+      const viewBoxHeight = parseFloat(viewBoxParts[3]) || 0;
+      if (viewBoxWidth > 0 && viewBoxHeight > 0) {
+        // Use viewBox dimensions for aspect ratio (most reliable)
+        aspectRatio = viewBoxWidth / viewBoxHeight;
+        calculatedWidth = aspectRatio * height;
+        // Update originalWidth to match fixed viewBox for consistency
+        if (originalWidth === 0 || originalWidth !== viewBoxWidth) {
+          originalWidth = viewBoxWidth;
+        }
+      }
+    }
+  }
+  
+  // Fallback to attribute dimensions if viewBox calculation didn't work
+  if (!calculatedWidth && originalWidth > 0 && originalHeight > 0) {
+    aspectRatio = originalWidth / originalHeight;
+    calculatedWidth = aspectRatio * height;
+  }
+  
+  // Final fallback: use reasonable default
+  // Ensure calculatedWidth is always assigned
+  if (!calculatedWidth || calculatedWidth <= 0) {
+    // For wide charts (like gantt), assume at least 2:1 ratio
+    calculatedWidth = Math.max(400, height * 2);
+    if (!aspectRatio) {
+      aspectRatio = calculatedWidth / height;
+    }
+    console.warn('[Mermaid Renderer] Invalid dimensions, using fallback width:', calculatedWidth);
+  }
+
+  // Set explicit width and height attributes to maintain aspect ratio
+  // Remove any CSS max-width that might constrain wide charts
+  svgNode.css('max-width', '');
+  
+  // Set dimensions - but preserve the original viewBox to avoid mirroring
+  // The viewBox defines the coordinate system, so we should keep it as-is
+  // calculatedWidth is guaranteed to be assigned at this point
+  svgNode.attr('width', `${calculatedWidth}px`);
   svgNode.attr('height', `${height}px`);
-  svgNode.attr('preserveAspectRatio', 'xMinYMin meet');
+  
+  // Keep original preserveAspectRatio to maintain alignment
+  // Use 'meet' to ensure content fits within bounds while maintaining aspect ratio
+  if (!svgNode.attr('preserveAspectRatio')) {
+    svgNode.attr('preserveAspectRatio', 'xMinYMin meet');
+  }
 
   // Extract only the SVG element, not the full HTML document
   // Use toString() to get the SVG element with its attributes (like Markless)
@@ -366,10 +566,15 @@ function processSvg(svgString: string, height: number): string {
   console.log('[Mermaid Renderer] Processed SVG:', {
     originalHeight,
     originalWidth,
+    viewBox: svgNode.attr('viewBox') || 'none',
+    aspectRatio: aspectRatio ? aspectRatio.toFixed(2) : 'N/A',
+    calculatedWidth,
     newHeight: height,
-    maxWidth,
     processedLength: processedSvg.length,
   });
+  
+  // Print full processed SVG to console for debugging
+  console.log('[Mermaid Renderer] Full processed SVG:', processedSvg);
 
   return processedSvg;
 }
@@ -418,10 +623,14 @@ const getMermaidDecoration = memoizeMermaidDecoration(async (
       height,
       darkMode
     );
+    console.log('[Mermaid Renderer] Full error SVG:', errorSvg);
     return errorSvg;
   }
   
   const processedSvg = processSvg(svgString, height);
+  
+  // Print final SVG that will be returned
+  console.log('[Mermaid Renderer] Final SVG returned from getMermaidDecoration:', processedSvg);
   
   return processedSvg;
 });
@@ -491,6 +700,147 @@ export async function renderMermaidSvg(
 export function svgToDataUri(svg: string): string {
   const base64 = Buffer.from(svg).toString('base64');
   return `data:image/svg+xml;base64,${base64}`;
+}
+
+/**
+ * Save SVG to an HTML file for verification (only for gantt charts)
+ * @param svg - The SVG string to save
+ * @param source - The original mermaid source code
+ * @param theme - The theme used ('default' or 'dark')
+ */
+export function saveSvgToHtml(svg: string, source: string, theme: 'default' | 'dark'): void {
+  // Only save HTML files for gantt charts
+  const trimmedSource = source.trim();
+  if (!trimmedSource.toLowerCase().startsWith('gantt')) {
+    return;
+  }
+  try {
+    if (!extensionContext) {
+      console.warn('[Mermaid Renderer] Cannot save HTML: extension context not available');
+      return;
+    }
+
+    // Get workspace folder
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders || workspaceFolders.length === 0) {
+      console.warn('[Mermaid Renderer] Cannot save HTML: no workspace folder');
+      return;
+    }
+
+    const workspaceRoot = workspaceFolders[0].uri.fsPath;
+    const outputDir = path.join(workspaceRoot, 'docs', 'uat', 'mermaid');
+    
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    // Generate a unique filename based on source hash
+    const sourceHash = createHash('sha256').update(source).digest('hex').substring(0, 8);
+    const timestamp = Date.now();
+    const filename = `mermaid-${sourceHash}-${timestamp}.html`;
+    const filePath = path.join(outputDir, filename);
+
+    // Create HTML content
+    const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mermaid Chart - ${sourceHash}</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: ${theme === 'dark' ? '#1e1e1e' : '#ffffff'};
+      color: ${theme === 'dark' ? '#cccccc' : '#333333'};
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .source-code {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: ${theme === 'dark' ? '#2d2d2d' : '#f5f5f5'};
+      border-radius: 4px;
+      border: 1px solid ${theme === 'dark' ? '#444' : '#ddd'};
+    }
+    .source-code h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .source-code pre {
+      margin: 0;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .svg-container {
+      text-align: center;
+      padding: 20px;
+      background-color: ${theme === 'dark' ? '#252526' : '#ffffff'};
+      border-radius: 4px;
+      border: 1px solid ${theme === 'dark' ? '#444' : '#ddd'};
+    }
+    .svg-container svg {
+      max-width: 100%;
+      height: auto;
+    }
+    .info {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: ${theme === 'dark' ? '#2d2d2d' : '#f5f5f5'};
+      border-radius: 4px;
+      font-size: 12px;
+      color: ${theme === 'dark' ? '#999' : '#666'};
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Mermaid Chart Rendering</h1>
+    
+    <div class="source-code">
+      <h3>Source Code:</h3>
+      <pre>${escapeHtml(source)}</pre>
+    </div>
+    
+    <div class="svg-container">
+      ${svg}
+    </div>
+    
+    <div class="info">
+      <strong>Theme:</strong> ${theme}<br>
+      <strong>Generated:</strong> ${new Date().toISOString()}<br>
+      <strong>Hash:</strong> ${sourceHash}${lastGanttLayoutMetrics ? `<br><br><strong>Layout Metrics (Pre-Render):</strong><br><pre style="font-size: 11px; overflow-x: auto; white-space: pre-wrap;">${escapeHtml(JSON.stringify(lastGanttLayoutMetrics, null, 2))}</pre>` : ''}
+    </div>
+  </div>
+</body>
+</html>`;
+
+    // Write file
+    fs.writeFileSync(filePath, htmlContent, 'utf8');
+    console.log(`[Mermaid Renderer] Saved HTML to: ${filePath}`);
+  } catch (error) {
+    console.error('[Mermaid Renderer] Failed to save HTML:', error instanceof Error ? error.message : error);
+  }
+}
+
+/**
+ * Escape HTML special characters
+ */
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 export function disposeMermaidRenderer(): void {

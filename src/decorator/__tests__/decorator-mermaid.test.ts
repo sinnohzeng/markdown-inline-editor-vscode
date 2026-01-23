@@ -2,6 +2,8 @@ jest.mock('../../mermaid/mermaid-renderer', () => ({
   initMermaidRenderer: jest.fn(),
   renderMermaidSvg: jest.fn(),
   svgToDataUri: jest.fn((svg: string) => `data:${svg}`),
+  createErrorSvg: jest.fn(() => '<svg></svg>'),
+  saveSvgToHtml: jest.fn(),
   disposeMermaidRenderer: jest.fn(),
 }));
 
