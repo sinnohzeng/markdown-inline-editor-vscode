@@ -446,10 +446,10 @@ export function CheckboxCheckedDecorationType() {
 export function MermaidHoverIndicatorDecorationType() {
   return window.createTextEditorDecorationType({
     before: {
-      contentText: '⧉ ',
+      contentText: '⧉',
       color: new ThemeColor('editor.foreground'),
       fontWeight: 'normal',
     },
-    opacity: '0.5', // Apply opacity to the entire decoration
+    opacity: '0.2', // Apply opacity to the entire decoration
   });
 }

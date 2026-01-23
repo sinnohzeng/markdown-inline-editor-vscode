@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { mapNormalizedToOriginal } from './position-mapping';
 import { shouldSkipInDiffView } from './diff-context';
 import { MarkdownParseCache } from './markdown-parse-cache';
-import { renderMermaidSvg, renderMermaidSvgNatural, svgToDataUri, createErrorSvg } from './mermaid/mermaid-renderer';
+import { renderMermaidSvgNatural, svgToDataUri, createErrorSvg } from './mermaid/mermaid-renderer';
 import * as cheerio from 'cheerio';
 
 /**
@@ -211,6 +211,7 @@ export class CodeBlockHoverProvider implements vscode.HoverProvider {
     const hoverOffset = document.offsetAt(position);
 
     // Check Mermaid blocks from parser
+    // Only trigger hover when hovering over the indicator decorator (⧉)
     for (const block of parseEntry.mermaidBlocks) {
       if (token.isCancellationRequested) {
         return;
@@ -220,15 +221,14 @@ export class CodeBlockHoverProvider implements vscode.HoverProvider {
       const end = mapNormalizedToOriginal(block.endPos, text);
 
       // Find the content start (after opening fence line) where the indicator is placed
+      // This matches the logic in decorator.ts
       const originalText = document.getText();
       const openingFenceLineEnd = originalText.indexOf('\n', start);
       const contentStart = openingFenceLineEnd !== -1 ? openingFenceLineEnd + 1 : start;
       const indicatorEnd = contentStart + 1; // Indicator is 1 character wide
 
-      // Check if hover position is within the code block OR within the indicator area
-      // This allows hovering over the indicator or anywhere in the block
-      if ((hoverOffset >= contentStart && hoverOffset < indicatorEnd) || 
-          (hoverOffset >= start && hoverOffset < end)) {
+      // Only check if hover position is within the indicator area (not the entire block)
+      if (hoverOffset >= contentStart && hoverOffset < indicatorEnd) {
         return this.createHoverForCodeBlock(
           block.source,
           'mermaid',
