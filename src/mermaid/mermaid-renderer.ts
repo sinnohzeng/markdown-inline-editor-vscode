@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { ColorThemeKind } from 'vscode';
 import * as cheerio from 'cheerio';
+import { LRUCache } from '../utils/lru-cache';
 
 type MermaidRenderOptions = {
   theme: 'default' | 'dark';
@@ -21,7 +22,9 @@ const pendingRenders = new Map<string, {
 let renderRequestCounter = 0;
 
 // Memoization cache for decorations
-const decorationCache = new Map<string, Promise<string>>();
+// Bounded LRU to prevent unbounded memory growth for large/edited documents.
+const MERMAID_DECORATION_CACHE_MAX_ENTRIES = 250;
+const decorationCache = new LRUCache<string, Promise<string>>(MERMAID_DECORATION_CACHE_MAX_ENTRIES);
 
 // Store disposables for cleanup
 let messageHandlerDisposable: vscode.Disposable | undefined;
@@ -618,10 +621,18 @@ function memoizeMermaidDecoration(
 ): (source: string, darkMode: boolean, height: number, fontFamily?: string) => Promise<string> {
   return (source: string, darkMode: boolean, height: number, fontFamily?: string): Promise<string> => {
     const key = `${source}|${darkMode}|${height}|${fontFamily ?? ''}`;
-    if (!decorationCache.has(key)) {
-      decorationCache.set(key, func(source, darkMode, height, fontFamily));
+    const cached = decorationCache.get(key);
+    if (cached) {
+      return cached;
     }
-    return decorationCache.get(key)!;
+
+    const promise = func(source, darkMode, height, fontFamily);
+    decorationCache.set(key, promise);
+    // If a render fails (timeout, disposal, transient issues), don't pin the failure in cache.
+    promise.catch(() => {
+      decorationCache.delete(key);
+    });
+    return promise;
   };
 }
 
@@ -722,7 +733,7 @@ export function disposeMermaidRenderer(): void {
   }
   
   // Clear all pending render timeouts and reject promises
-  for (const [requestId, { reject, timeoutId }] of pendingRenders.entries()) {
+  for (const { reject, timeoutId } of pendingRenders.values()) {
     clearTimeout(timeoutId);
     reject(new Error('Mermaid renderer disposed'));
   }

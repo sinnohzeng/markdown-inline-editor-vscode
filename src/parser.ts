@@ -48,6 +48,12 @@ export interface MermaidBlock {
   startPos: number;
   endPos: number;
   source: string;
+  /**
+   * Number of lines in `source` (1 + newline count).
+   *
+   * Precomputed during parsing to avoid re-counting on every selection change.
+   */
+  numLines: number;
 }
 
 /**
@@ -1143,10 +1149,19 @@ export class MarkdownParser {
     this.addScope(scopes, fenceStart, closingEnd, 'codeBlock');
 
     if (isMermaid) {
+      const source = node.value ?? '';
+      // Fast newline count (avoid regex allocations in hot paths).
+      let numLines = 1;
+      for (let i = 0; i < source.length; i++) {
+        if (source.charCodeAt(i) === 10 /* '\n' */) {
+          numLines++;
+        }
+      }
       mermaidBlocks.push({
         startPos: fenceStart,
         endPos: closingEnd,
-        source: node.value ?? '',
+        source,
+        numLines,
       });
     }
   }

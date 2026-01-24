@@ -27,6 +27,7 @@ export default tseslint.config(
     ignores: [
       'out',
       'dist',
+      'assets/**',
       '**/*.d.ts',
       'node_modules',
       'coverage',

@@ -28,6 +28,7 @@ describe('Decorator - Mermaid diagrams', () => {
       startPos: 0,
       endPos: blockText.length,
       source: 'graph TD\n  A --> B',
+      numLines: 2,
     },
   ];
 
@@ -80,6 +81,37 @@ describe('Decorator - Mermaid diagrams', () => {
     await (decorator as any).updateMermaidDiagrams(mermaidBlocks, text, document.version);
 
     expect(mockRenderMermaidSvg).not.toHaveBeenCalled();
+    expect(applyMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('deduplicates rendering for identical blocks during one update', async () => {
+    const blockText2 = blockText;
+    const text2 = `${blockText}\n\n${blockText2}\nAfter`;
+    const document = new TextDocument(Uri.file('test.md'), 'markdown', 1, text2);
+    const outsideOffset = text2.indexOf('After') + 1;
+    const outsidePosition = document.positionAt(outsideOffset);
+    const selection = new Selection(outsidePosition, outsidePosition);
+    const editor = new TextEditor(document, [selection]);
+    const decorator = new Decorator(new MarkdownParseCache({} as any));
+
+    (decorator as any).activeEditor = editor;
+    (decorator as any).isSelectionOrCursorInsideOffsets = jest.fn().mockReturnValue(false);
+    const applyMock = jest.fn();
+    (decorator as any).mermaidDecorations = {
+      apply: applyMock,
+      clear: jest.fn(),
+    };
+
+    const secondStart = blockText.length + 2; // "\n\n"
+    const secondEnd = secondStart + blockText2.length;
+    const blocks = [
+      { startPos: 0, endPos: blockText.length, source: 'graph TD\n  A --> B', numLines: 2 },
+      { startPos: secondStart, endPos: secondEnd, source: 'graph TD\n  A --> B', numLines: 2 },
+    ];
+
+    await (decorator as any).updateMermaidDiagrams(blocks, text2, document.version);
+
+    expect(mockRenderMermaidSvg).toHaveBeenCalledTimes(1);
     expect(applyMock).toHaveBeenCalledTimes(1);
   });
 });

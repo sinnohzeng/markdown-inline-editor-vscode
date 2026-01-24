@@ -20,7 +20,63 @@ const PERFORMANCE_CONSTANTS = {
   DEBOUNCE_TIMEOUT_MS: 150,
   /** Maximum timeout for requestIdleCallback (ms) - ensures updates don't wait indefinitely */
   IDLE_CALLBACK_TIMEOUT_MS: 300,
+  /** Max Mermaid renders in flight (bounded parallelism) */
+  MERMAID_MAX_CONCURRENCY: 4,
 } as const;
+
+type MermaidBlockKeyCacheEntry = {
+  theme: 'default' | 'dark';
+  fontFamily?: string;
+  numLines: number;
+  key: string;
+};
+
+// Cache hash computation results per block object (cleared automatically on GC / parse cache eviction).
+const mermaidBlockKeyCache = new WeakMap<MermaidBlock, MermaidBlockKeyCacheEntry>();
+
+function getMermaidBlockCacheKey(
+  block: MermaidBlock,
+  theme: 'default' | 'dark',
+  fontFamily?: string
+): string {
+  const cached = mermaidBlockKeyCache.get(block);
+  if (
+    cached &&
+    cached.theme === theme &&
+    cached.fontFamily === fontFamily &&
+    cached.numLines === block.numLines
+  ) {
+    return cached.key;
+  }
+
+  const keySource = `${block.source}\n${theme}\n${fontFamily ?? ''}\n${block.numLines}`;
+  const key = createHash('sha256').update(keySource).digest('hex');
+  mermaidBlockKeyCache.set(block, { theme, fontFamily, numLines: block.numLines, key });
+  return key;
+}
+
+async function mapWithConcurrency<T, R>(
+  items: readonly T[],
+  maxConcurrency: number,
+  mapper: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+
+  const worker = async () => {
+    while (true) {
+      const index = nextIndex++;
+      if (index >= items.length) {
+        return;
+      }
+      results[index] = await mapper(items[index], index);
+    }
+  };
+
+  const concurrency = Math.max(1, Math.min(maxConcurrency, items.length));
+  await Promise.all(Array.from({ length: concurrency }, () => worker()));
+  return results;
+}
 
 
 /**
@@ -386,80 +442,98 @@ export class Decorator {
     const dataUrisByKey = new Map<string, string>();
     const indicatorRanges: Range[] = [];
 
-    for (const block of mermaidBlocks) {
-      if (token !== this.mermaidUpdateToken || editor.document.version !== documentVersion) {
-        return;
-      }
+    const originalText = editor.document.getText();
 
-      if (this.isSelectionOrCursorInsideOffsets(block.startPos, block.endPos, text, editor.selections, editor.document)) {
+    // Deduplicate renders for identical keys during this update (parallel-safe).
+    const dataUriPromisesByKey = new Map<string, Promise<string>>();
+
+    const results = await mapWithConcurrency(
+      mermaidBlocks,
+      PERFORMANCE_CONSTANTS.MERMAID_MAX_CONCURRENCY,
+      async (block): Promise<{ key: string; range: Range; dataUri: string; indicatorRange: Range } | null> => {
+        // Early exit checks (token/version can change while we await renders).
+        if (token !== this.mermaidUpdateToken || editor.document.version !== documentVersion) {
+          return null;
+        }
+
+        if (this.isSelectionOrCursorInsideOffsets(block.startPos, block.endPos, text, editor.selections, editor.document)) {
+          return null;
+        }
+
+        const range = this.createRange(block.startPos, block.endPos, text);
+        if (!range) {
+          return null;
+        }
+
+        // Add indicator decoration at the start of the mermaid block content
+        // Place it at the beginning of the first line of content (after opening fence line).
+        const blockStart = mapNormalizedToOriginal(block.startPos, text);
+        const openingFenceLineEnd = originalText.indexOf('\n', blockStart);
+        const contentStart = openingFenceLineEnd !== -1 ? openingFenceLineEnd + 1 : blockStart;
+
+        const contentStartPos = editor.document.positionAt(contentStart);
+        // Create a small range (1 character) at the start of content for the indicator.
+        const line = editor.document.lineAt(contentStartPos.line);
+        const indicatorEndChar = Math.min(contentStartPos.character + 1, line.text.length);
+        const indicatorRange = new Range(
+          contentStartPos,
+          new Position(contentStartPos.line, indicatorEndChar)
+        );
+
+        const key = getMermaidBlockCacheKey(block, theme, fontFamily);
+
+        let dataUriPromise = dataUriPromisesByKey.get(key);
+        if (!dataUriPromise) {
+          dataUriPromise = (async () => {
+            try {
+              const svg = await renderMermaidSvg(block.source, { theme, fontFamily, numLines: block.numLines });
+              return svgToDataUri(svg);
+            } catch (error) {
+              console.warn('Mermaid render failed:', error instanceof Error ? error.message : error);
+              // Create error SVG to display instead of silently failing.
+              let errorMessage = 'Rendering failed';
+              if (error instanceof Error) {
+                errorMessage = error.message || error.toString() || 'Rendering failed';
+              } else if (typeof error === 'string') {
+                errorMessage = error;
+              } else {
+                errorMessage = String(error) || 'Rendering failed';
+              }
+              if (!errorMessage || errorMessage.trim().length === 0) {
+                errorMessage = 'Unknown rendering error occurred';
+              }
+              const errorSvg = createErrorSvg(
+                errorMessage,
+                Math.max(400, block.numLines * 20),
+                block.numLines * 20,
+                theme === 'dark'
+              );
+              return svgToDataUri(errorSvg);
+            }
+          })();
+          dataUriPromisesByKey.set(key, dataUriPromise);
+        }
+
+        const dataUri = await dataUriPromise;
+
+        if (token !== this.mermaidUpdateToken || editor.document.version !== documentVersion) {
+          return null;
+        }
+
+        return { key, range, dataUri, indicatorRange };
+      }
+    );
+
+    // Merge results sequentially (single apply at end).
+    for (const result of results) {
+      if (!result) {
         continue;
       }
-
-      const range = this.createRange(block.startPos, block.endPos, text);
-      if (!range) continue;
-
-      // Add indicator decoration at the start of the mermaid block content
-      // Place it at the beginning of the first line of content (after opening fence line)
-      const blockStart = mapNormalizedToOriginal(block.startPos, text);
-      const originalText = editor.document.getText();
-      
-      // Find the newline after the opening fence line to place indicator at content start
-      const openingFenceLineEnd = originalText.indexOf('\n', blockStart);
-      const contentStart = openingFenceLineEnd !== -1 ? openingFenceLineEnd + 1 : blockStart;
-      
-      const contentStartPos = editor.document.positionAt(contentStart);
-      // Create a small range (1 character) at the start of content for the indicator
-      const line = editor.document.lineAt(contentStartPos.line);
-      const indicatorEndChar = Math.min(contentStartPos.character + 1, line.text.length);
-      const indicatorRange = new Range(
-        contentStartPos,
-        new Position(contentStartPos.line, indicatorEndChar)
-      );
-      indicatorRanges.push(indicatorRange);
-
-      // Calculate number of lines in the source content (excluding fence lines)
-      // This matches the actual diagram content height
-      const numLines = 1 + (block.source.match(/\n/g) || []).length;
-
-      // Include numLines in the cache key to ensure proper sizing
-      const keySource = `${block.source}\n${theme}\n${fontFamily ?? ''}\n${numLines}`;
-      const key = createHash('sha256').update(keySource).digest('hex');
-
-      if (!dataUrisByKey.has(key)) {
-        try {
-          const svg = await renderMermaidSvg(block.source, { theme, fontFamily, numLines });
-          const dataUri = svgToDataUri(svg);
-          dataUrisByKey.set(key, dataUri);
-        } catch (error) {
-          console.warn('Mermaid render failed:', error instanceof Error ? error.message : error);
-          // Create error SVG to display instead of silently failing
-          // Extract meaningful error message
-          let errorMessage = 'Rendering failed';
-          if (error instanceof Error) {
-            errorMessage = error.message || error.toString() || 'Rendering failed';
-          } else if (typeof error === 'string') {
-            errorMessage = error;
-          } else {
-            errorMessage = String(error) || 'Rendering failed';
-          }
-          // Ensure we have a non-empty error message
-          if (!errorMessage || errorMessage.trim().length === 0) {
-            errorMessage = 'Unknown rendering error occurred';
-          }
-          const errorSvg = createErrorSvg(
-            errorMessage,
-            Math.max(400, numLines * 20), // Width based on numLines
-            numLines * 20, // Height based on numLines
-            theme === 'dark'
-          );
-          const errorDataUri = svgToDataUri(errorSvg);
-          dataUrisByKey.set(key, errorDataUri);
-        }
-      }
-
-      const ranges = rangesByKey.get(key) || [];
-      ranges.push(range);
-      rangesByKey.set(key, ranges);
+      dataUrisByKey.set(result.key, result.dataUri);
+      const ranges = rangesByKey.get(result.key) || [];
+      ranges.push(result.range);
+      rangesByKey.set(result.key, ranges);
+      indicatorRanges.push(result.indicatorRange);
     }
 
     if (token !== this.mermaidUpdateToken || editor.document.version !== documentVersion) {
