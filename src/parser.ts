@@ -15,7 +15,7 @@ import type {
   Text,
 } from "mdast";
 import { getRemarkProcessorSync, getRemarkProcessor } from "./parser-remark";
-import { emojiByShortcode } from "./emoji-map";
+import { getEmojiMap } from "./emoji-map-loader";
 
 /**
  * Represents a decoration range in the markdown document.
@@ -1767,6 +1767,26 @@ export class MarkdownParser {
 
   /**
    * Detects and decorates emoji shortcodes in a text slice.
+   *
+   * Matches GitHub-style emoji shortcodes (e.g., `:smile:`, `:+1:`, `:t-rex:`).
+   * Shortcodes must:
+   * - Start and end with `:`
+   * - Contain only alphanumeric characters, underscores, hyphens, and plus signs
+   * - Be case-insensitive (matched against lowercase keys in emoji map)
+   *
+   * The regex pattern `/:([a-z0-9_+-]+):/gi` matches valid shortcode patterns.
+   * Since this processes text nodes from the parsed AST (not raw markdown),
+   * URLs and other markdown syntax are already handled by their respective nodes,
+   * reducing false positives. However, the pattern is still defensive and only
+   * matches when a valid emoji exists in the emoji map.
+   *
+   * The emoji map is lazily loaded only when colons are found in the text,
+   * improving initial load time for documents without emojis.
+   *
+   * @param slice - The text slice to search for emoji shortcodes
+   * @param offset - Character offset of the slice within the original document
+   * @param decorations - Array to accumulate decoration ranges
+   * @param scopes - Array to accumulate scope ranges
    */
   private processEmojiShortcodesInSlice(
     slice: string,
@@ -1778,13 +1798,22 @@ export class MarkdownParser {
       return;
     }
 
+    // Lazy load emoji map only when we encounter a colon (potential emoji)
+    const emojiByShortcode = getEmojiMap();
+
+    // Match GitHub-style emoji shortcodes: :shortcode:
+    // Pattern allows: letters, numbers, underscores, hyphens, plus signs
+    // Examples: :smile:, :+1:, :-1:, :t-rex:, :non-potable_water:
+    // The 'g' flag ensures we find all matches, 'i' makes it case-insensitive
     const regex = /:([a-z0-9_+-]+):/gi;
     let match: RegExpExecArray | null;
     while ((match = regex.exec(slice)) !== null) {
       const rawName = match[1];
+      // Normalize to lowercase for case-insensitive lookup
       const name = rawName.toLowerCase();
       const emoji = emojiByShortcode[name];
       if (!emoji) {
+        // Invalid shortcode (not in emoji map) - silently ignore
         continue;
       }
 
