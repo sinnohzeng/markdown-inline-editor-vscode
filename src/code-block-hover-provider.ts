@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { mapNormalizedToOriginal } from './position-mapping';
 import { shouldSkipInDiffView } from './diff-context';
 import { MarkdownParseCache } from './markdown-parse-cache';
-import { renderMermaidSvgNatural, createErrorSvg } from './mermaid/mermaid-renderer';
+import { renderMermaidSvgNatural, createErrorSvg, svgToDataUri } from './mermaid/mermaid-renderer';
 import * as cheerio from 'cheerio';
 
 /**
@@ -441,8 +441,13 @@ export class CodeBlockHoverProvider implements vscode.HoverProvider {
       markdown.isTrusted = true; // SVGs are safe
       
       if (result.html) {
-        // Embed SVG directly to avoid data URI truncation in hover
-        markdown.appendMarkdown(result.html);
+        // Convert SVG to data URI for reliable rendering in VS Code hover
+        // VS Code hover rendering works better with data URI images than raw SVG HTML
+        const dataUri = svgToDataUri(result.html);
+        const escapedUri = escapeHtmlAttribute(dataUri);
+        markdown.appendMarkdown(
+          `<img src="${escapedUri}" width="${result.width}" height="${result.height}" style="width: ${result.width}px; height: ${result.height}px; max-width: ${result.width}px; max-height: ${result.height}px;" />`
+        );
       } else if (result.dataUri) {
         // Only escape quotes in data URI (data URI is already encoded, don't escape &, <, >)
         const escapedUri = escapeHtmlAttribute(result.dataUri);
