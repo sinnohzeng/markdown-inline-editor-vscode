@@ -12,10 +12,11 @@
 * **Hide syntax** – No more `**`, `~~`, backticks cluttering your view when reading
 * **Smart reveal** – Click any text to instantly see/edit raw Markdown  
 * **Ghost state** – Faint syntax markers appear when cursor is on a line, providing edit cues without clutter
+* **Emoji shortcodes** – Optional rendering for `:smile:` / `:+1:` style shortcodes
 * **Fast** – Intelligent caching, no lag on selection changes
 * **Compatible** – Standard `.md` files, works with any tool
 * **Theme-aware** – Automatically adapts to your VS Code theme
-* **Zero configuration** – Works out of the box
+* **Works out of the box** – With optional settings when you want them
 
 ## Demo
 
@@ -94,10 +95,11 @@ The extension uses an intelligent **3-state syntax shadowing system** that adapt
 - **Ordered list numbers** always remain visible
 
 Configure ghost opacity: `markdownInlineEditor.decorations.ghostFaintOpacity` (default: 0.3)
+Configure emoji shortcodes: `markdownInlineEditor.emojis.enabled` (default: true)
 
 ## Supported Features
 
-The extension currently supports **14 markdown features** with syntax hiding. Formatting appears inline while syntax markers stay hidden—click any text to reveal and edit raw Markdown.
+The extension supports the following Markdown (and common GitHub-flavored) features with inline rendering and syntax hiding. Formatting appears inline while syntax markers stay hidden—click any text to reveal and edit raw Markdown.
 
 ### Text Formatting
 * [x] **Bold** (`**text**`) • [Details](docs/features/done/bold.md)
@@ -120,9 +122,26 @@ The extension currently supports **14 markdown features** with syntax hiding. Fo
 ### Code
 * [x] **Code Blocks** (`` ```lang ``) • [Details](docs/features/done/code-blocks.md)
 * [x] **YAML Frontmatter** • [Details](docs/features/done/yaml-frontmatter.md) • [Issue #27](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/27)
+* [x] **Emoji Support** (`:smile:`) • [Details](docs/features/done/emoji-support.md) • [Issue #30](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/30)
 
 ### Configuration
 * [x] **Show Raw Markdown in Diffs** • [Details](docs/features/done/show-raw-markdown-in-diffs.md) • [Issue #20](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/20)
+
+## Settings (Optional)
+
+All settings are under the `Markdown Inline Editor` section in VS Code Settings (search for `markdownInlineEditor`).
+
+### Appearance
+
+- `markdownInlineEditor.decorations.ghostFaintOpacity` (default: `0.3`): Opacity of faint “ghost” markers on the active line.
+- `markdownInlineEditor.decorations.frontmatterDelimiterOpacity` (default: `0.3`): Opacity of YAML frontmatter `---` delimiters.
+- `markdownInlineEditor.decorations.codeBlockLanguageOpacity` (default: `0.3`): Opacity of fenced code block language identifiers (e.g. ```ts).
+
+### Behavior
+
+- `markdownInlineEditor.defaultBehaviors.diffView.applyDecorations` (default: `false`): Apply decorations in diff views (off by default to make reviews easier).
+- `markdownInlineEditor.links.singleClickOpen` (default: `false`): Open links/images with a single click (may interfere with text selection).
+- `markdownInlineEditor.emojis.enabled` (default: `true`): Render emoji shortcodes like `:smile:` inline.
 
 ## Upcoming Features
 
@@ -142,7 +161,6 @@ The extension currently supports **14 markdown features** with syntax hiding. Fo
 ### Low Priority
 * [ ] **HTML Tags** • [Details](docs/features/todo/html-tags.md) • [Issue #29](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/29)
 * [ ] **Mentions/References** • [Details](docs/features/todo/mentions-references.md) • [Issue #25](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/25)
-* [ ] **Emoji Support** • [Details](docs/features/todo/emoji-support.md) • [Issue #30](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/30)
 * [ ] **Ordered List Auto-Numbering** • [Details](docs/features/todo/ordered-list-auto-numbering.md) • [Issue #31](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/31)
 * [ ] **Footnotes** • [Details](docs/features/todo/footnotes.md) • [Issue #32](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/32)
 
@@ -254,9 +272,11 @@ npm install
 | `npm run test:watch`    | Run tests in watch mode                 |
 | `npm run test:coverage` | Generate coverage report                |
 | `npm run lint`          | Run ESLint                              |
+| `npm run validate`      | Run docs lint + tests + build           |
 | `npm run package`       | Create `.vsix` package                  |
 | `npm run clean`         | Clean build artifacts                   |
 | `npm run build`         | Full build (compile + bundle + package) |
+| `npm run release`       | Automated release workflow              |
 
 ### Executing
 
