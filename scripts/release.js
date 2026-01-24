@@ -58,7 +58,7 @@ try {
     run("npx git-cliff --version", { stdio: "ignore" });
   } catch (err) {
     throw new Error(
-      "git-cliff is not available. Install it with: npm install -g git-cliff",
+      "git-cliff is not available. Run 'npm install' to install dev dependencies, or install globally with: npm install -g git-cliff",
     );
   }
 
