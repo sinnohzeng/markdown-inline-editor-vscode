@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.3](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.13.2..v1.13.3) - 2026-01-25
+
+### Changed
+
+- emphasize pushing tags in release process - ([f766940](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/f766940a530dede94381e341c2c4c407f73462b8))
+
+### Fixed
+
+- **(ci)** remove ci dependency from release jobs - ([43c4bf1](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/43c4bf125ae1911482f4abeee73274e4e43cf67e))
+- **(ci)** add workflow_dispatch to manually trigger releases - ([1510954](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/1510954865018fe811cfc1965052568a67d3387b))
+- **(ci)** restore ci dependency for releases with improvements - ([90525ab](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/90525ab66306fff88df5e714659dd8a2562ed1c6))
+
 ## [1.13.1](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.13.0..v1.13.1) - 2026-01-25
 
 ### Changed
