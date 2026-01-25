@@ -38,6 +38,16 @@ coverage/**
 test-report/**
 *.log
 
+# Source maps (exclude from package)
+*.map
+**/*.map
+dist/**/*.map
+extension/dist/**/*.map
+
+# TypeScript declaration files (not needed at runtime)
+dist/**/*.d.ts
+**/*.d.ts
+
 # Test files
 test-*.md
 *.test.ts

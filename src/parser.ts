@@ -44,12 +44,25 @@ export interface ScopeRange {
   kind?: string;
 }
 
+export interface MermaidBlock {
+  startPos: number;
+  endPos: number;
+  source: string;
+  /**
+   * Number of lines in `source` (1 + newline count).
+   *
+   * Precomputed during parsing to avoid re-counting on every selection change.
+   */
+  numLines: number;
+}
+
 /**
  * Result of parsing markdown for decorations and scopes.
  */
 export interface ParseResult {
   decorations: DecorationRange[];
   scopes: ScopeRange[];
+  mermaidBlocks: MermaidBlock[];
 }
 
 /**
@@ -168,8 +181,8 @@ export class MarkdownParser {
    * @returns {ParseResult} Decorations and scopes, sorted by startPos
    */
   extractDecorationsWithScopes(text: string): ParseResult {
-    if (!text || typeof text !== "string") {
-      return { decorations: [], scopes: [] };
+    if (!text || typeof text !== 'string') {
+      return { decorations: [], scopes: [], mermaidBlocks: [] };
     }
 
     // Normalize line endings to \n for consistent position tracking
@@ -179,6 +192,7 @@ export class MarkdownParser {
 
     const decorations: DecorationRange[] = [];
     const scopes: ScopeRange[] = [];
+    const mermaidBlocks: MermaidBlock[] = [];
 
     // Process frontmatter before remark parsing to avoid conflicts with thematic break detection
     this.processFrontmatter(normalizedText, decorations, scopes);
@@ -188,7 +202,7 @@ export class MarkdownParser {
       const ast = this.processor.parse(normalizedText) as Root;
 
       // Process AST nodes and extract decorations + scopes
-      this.processAST(ast, normalizedText, decorations, scopes);
+      this.processAST(ast, normalizedText, decorations, scopes, mermaidBlocks);
 
       // Handle edge cases: empty image alt text that remark doesn't parse as Image node
       this.handleEmptyImageAlt(normalizedText, decorations);
@@ -207,6 +221,7 @@ export class MarkdownParser {
     return {
       decorations,
       scopes: this.dedupeScopes(scopes),
+      mermaidBlocks,
     };
   }
 
@@ -225,6 +240,7 @@ export class MarkdownParser {
     text: string,
     decorations: DecorationRange[],
     scopes: ScopeRange[],
+    mermaidBlocks: MermaidBlock[]
   ): void {
     // Track processed blockquote positions to avoid duplicates from nested blockquotes
     const processedBlockquotePositions = new Set<number>();
@@ -305,7 +321,7 @@ export class MarkdownParser {
               break;
 
             case "code":
-              this.processCodeBlock(node as Code, text, decorations, scopes);
+              this.processCodeBlock(node as Code, text, decorations, scopes, mermaidBlocks);
               break;
 
             case "link":
@@ -688,6 +704,9 @@ export class MarkdownParser {
 
   /**
    * Processes a strong (bold) node.
+   *
+   * Skips processing if the bold text is inside a code block or inline code,
+   * as markdown formatting should not be parsed inside code contexts.
    */
   private processStrong(
     node: Strong,
@@ -730,9 +749,9 @@ export class MarkdownParser {
 
   /**
    * Processes an emphasis (italic) node.
-   */
-  /**
-   * Processes an emphasis (italic) node.
+   *
+   * Skips processing if the italic text is inside a code block or inline code,
+   * as markdown formatting should not be parsed inside code contexts.
    */
   private processEmphasis(
     node: Emphasis,
@@ -789,6 +808,9 @@ export class MarkdownParser {
    *
    * Validates that the node actually uses ~~ (double tilde) markers,
    * not single ~, to prevent incorrect parsing of single tildes as strikethrough.
+   *
+   * Skips processing if the strikethrough text is inside a code block or inline code,
+   * as markdown formatting should not be parsed inside code contexts.
    */
   private processStrikethrough(
     node: Delete,
@@ -887,6 +909,7 @@ export class MarkdownParser {
     text: string,
     decorations: DecorationRange[],
     scopes: ScopeRange[],
+    mermaidBlocks: MermaidBlock[]
   ): void {
     if (!this.hasValidPosition(node)) return;
 
@@ -1032,61 +1055,122 @@ export class MarkdownParser {
     const closingLineEnd = text.indexOf("\n", closingFence);
     const closingEnd = closingLineEnd !== -1 ? closingLineEnd + 1 : codeEnd;
 
-    // Apply code block background to the entire block including fence lines
-    // but NOT including the newline after the closing fence
-    decorations.push({
-      startPos: fenceStart,
-      endPos: closingFenceEnd,
-      type: "codeBlock",
-    });
+    const isMermaid = node.lang?.trim() === 'mermaid';
 
-    // Hide the opening fence markers
-    decorations.push({
-      startPos: fenceStart,
-      endPos: openingFenceEnd,
-      type: "hide",
-    });
+    if (!isMermaid) {
+      // Apply code block background to the entire block including fence lines
+      // but NOT including the newline after the closing fence
+      decorations.push({
+        startPos: fenceStart,
+        endPos: closingFenceEnd,
+        type: 'codeBlock',
+      });
 
-    // Find language identifier (between fence and newline)
-    const languageStart = openingFenceEnd;
-    const languageEnd =
-      openingLineEnd !== -1 && openingLineEnd < closingFence
+      // Hide the opening fence markers
+      decorations.push({
+        startPos: fenceStart,
+        endPos: openingFenceEnd,
+        type: 'hide',
+      });
+
+      // Find language identifier (between fence and newline)
+      const languageStart = openingFenceEnd;
+      const languageEnd = openingLineEnd !== -1 && openingLineEnd < closingFence
         ? openingLineEnd
         : openingFenceEnd;
 
-    // Apply language identifier decoration if there's a language (not just whitespace)
-    if (languageEnd > languageStart) {
-      const languageText = text.substring(languageStart, languageEnd).trim();
-      if (languageText.length > 0) {
+      // Apply language identifier decoration if there's a language (not just whitespace)
+      if (languageEnd > languageStart) {
+        const languageText = text.substring(languageStart, languageEnd).trim();
+        if (languageText.length > 0) {
+          decorations.push({
+            startPos: languageStart,
+            endPos: languageEnd,
+            type: 'codeBlockLanguage',
+          });
+        }
+      }
+
+      // Hide the newline after the language identifier (if present)
+      if (openingLineEnd !== -1 && openingLineEnd < closingFence) {
+        decorations.push({
+          startPos: openingLineEnd,
+          endPos: openingLineEnd + 1,
+          type: 'hide',
+        });
+      }
+
+      // Hide the closing fence line (fence and newline if present)
+      decorations.push({
+        startPos: closingFence,
+        endPos: closingEnd,
+        type: 'hide',
+      });
+    } else {
+      // For Mermaid blocks, hide the fence markers so only the SVG shows
+      // Hide the opening fence markers (```mermaid)
+      decorations.push({
+        startPos: fenceStart,
+        endPos: openingFenceEnd,
+        type: 'hide',
+      });
+
+      // Find language identifier (between fence and newline) and hide it
+      const languageStart = openingFenceEnd;
+      const languageEnd = openingLineEnd !== -1 && openingLineEnd < closingFence 
+        ? openingLineEnd 
+        : openingFenceEnd;
+
+      if (languageEnd > languageStart) {
         decorations.push({
           startPos: languageStart,
           endPos: languageEnd,
-          type: "codeBlockLanguage",
+          type: 'hide',
         });
       }
-    }
 
-    // Hide the newline after the language identifier (if present)
-    if (openingLineEnd !== -1 && openingLineEnd < closingFence) {
+      // Hide the newline after the language identifier (if present)
+      if (openingLineEnd !== -1 && openingLineEnd < closingFence) {
+        decorations.push({
+          startPos: openingLineEnd,
+          endPos: openingLineEnd + 1,
+          type: 'hide',
+        });
+      }
+
+      // Hide the closing fence line (```)
       decorations.push({
-        startPos: openingLineEnd,
-        endPos: openingLineEnd + 1,
-        type: "hide",
+        startPos: closingFence,
+        endPos: closingEnd,
+        type: 'hide',
       });
     }
 
-    // Hide the closing fence line (fence and newline if present)
-    decorations.push({
-      startPos: closingFence,
-      endPos: closingEnd,
-      type: "hide",
-    });
+    this.addScope(scopes, fenceStart, closingEnd, 'codeBlock');
 
-    this.addScope(scopes, fenceStart, closingEnd, "codeBlock");
+    if (isMermaid) {
+      const source = node.value ?? '';
+      // Fast newline count (avoid regex allocations in hot paths).
+      let numLines = 1;
+      for (let i = 0; i < source.length; i++) {
+        if (source.charCodeAt(i) === 10 /* '\n' */) {
+          numLines++;
+        }
+      }
+      mermaidBlocks.push({
+        startPos: fenceStart,
+        endPos: closingEnd,
+        source,
+        numLines,
+      });
+    }
   }
 
   /**
    * Processes a link node.
+   *
+   * Skips processing if the link is inside a code block or inline code,
+   * as links should not be parsed inside code contexts.
    */
   private processLink(
     node: Link,

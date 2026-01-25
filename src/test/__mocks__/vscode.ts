@@ -85,6 +85,15 @@ class MockTextDocument {
   getText(): string {
     return this.text;
   }
+
+  lineAt(line: number): { text: string } {
+    // Minimal subset of VS Code's TextDocument.lineAt used by tests.
+    // Keep line splitting consistent with offsetAt (treat CRLF as single break).
+    const lines = this.text.split(/\r\n|\r|\n/);
+    const safeLine = Math.max(0, Math.min(line, Math.max(0, lines.length - 1)));
+    return { text: lines[safeLine] ?? '' };
+  }
+
   offsetAt(position: { line: number; character: number }): number {
     // Convert position to offset
     const lines = this.text.split(/\r\n|\r|\n/);

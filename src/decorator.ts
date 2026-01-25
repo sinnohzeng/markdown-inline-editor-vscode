@@ -1,5 +1,6 @@
-import { Range, TextEditor, TextDocument, TextDocumentChangeEvent, window, TextEditorSelectionChangeKind, DecorationOptions } from 'vscode';
-import { DecorationRange, DecorationType, ScopeRange } from './parser';
+import { Range, Position, TextEditor, TextDocument, TextDocumentChangeEvent, window, TextEditorSelectionChangeKind, ColorThemeKind, workspace, DecorationOptions } from 'vscode';
+import { createHash } from 'crypto';
+import { DecorationRange, DecorationType, MermaidBlock, ScopeRange } from './parser';
 import { mapNormalizedToOriginal } from './position-mapping';
 import { config } from './config';
 import { isDiffLikeUri, isDiffViewVisible } from './diff-context';
@@ -7,6 +8,9 @@ import { MarkdownParseCache } from './markdown-parse-cache';
 import { DecorationTypeRegistry } from './decorator/decoration-type-registry';
 import { filterDecorationsForEditor, ScopeEntry } from './decorator/visibility-model';
 import { handleCheckboxClick } from './decorator/checkbox-toggle';
+import { MermaidDiagramDecorations } from './decorator/mermaid-diagram-decorations';
+import { renderMermaidSvg, svgToDataUri, createErrorSvg } from './mermaid/mermaid-renderer';
+import { MermaidHoverIndicatorDecorationType } from './decorations';
 
 /**
  * Performance and caching constants.
@@ -16,7 +20,63 @@ const PERFORMANCE_CONSTANTS = {
   DEBOUNCE_TIMEOUT_MS: 150,
   /** Maximum timeout for requestIdleCallback (ms) - ensures updates don't wait indefinitely */
   IDLE_CALLBACK_TIMEOUT_MS: 300,
+  /** Max Mermaid renders in flight (bounded parallelism) */
+  MERMAID_MAX_CONCURRENCY: 4,
 } as const;
+
+type MermaidBlockKeyCacheEntry = {
+  theme: 'default' | 'dark';
+  fontFamily?: string;
+  numLines: number;
+  key: string;
+};
+
+// Cache hash computation results per block object (cleared automatically on GC / parse cache eviction).
+const mermaidBlockKeyCache = new WeakMap<MermaidBlock, MermaidBlockKeyCacheEntry>();
+
+function getMermaidBlockCacheKey(
+  block: MermaidBlock,
+  theme: 'default' | 'dark',
+  fontFamily?: string
+): string {
+  const cached = mermaidBlockKeyCache.get(block);
+  if (
+    cached &&
+    cached.theme === theme &&
+    cached.fontFamily === fontFamily &&
+    cached.numLines === block.numLines
+  ) {
+    return cached.key;
+  }
+
+  const keySource = `${block.source}\n${theme}\n${fontFamily ?? ''}\n${block.numLines}`;
+  const key = createHash('sha256').update(keySource).digest('hex');
+  mermaidBlockKeyCache.set(block, { theme, fontFamily, numLines: block.numLines, key });
+  return key;
+}
+
+async function mapWithConcurrency<T, R>(
+  items: readonly T[],
+  maxConcurrency: number,
+  mapper: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+
+  const worker = async () => {
+    while (true) {
+      const index = nextIndex++;
+      if (index >= items.length) {
+        return;
+      }
+      results[index] = await mapper(items[index], index);
+    }
+  };
+
+  const concurrency = Math.max(1, Math.min(maxConcurrency, items.length));
+  await Promise.all(Array.from({ length: concurrency }, () => worker()));
+  return results;
+}
 
 
 /**
@@ -52,6 +112,9 @@ export class Decorator {
   private skipDecorationsInDiffView = true;
 
   private decorationTypes: DecorationTypeRegistry;
+  private mermaidDecorations = new MermaidDiagramDecorations();
+  private mermaidUpdateToken = 0;
+  private mermaidHoverIndicatorDecorationType = MermaidHoverIndicatorDecorationType();
 
   constructor(parseCache: MarkdownParseCache) {
     this.parseCache = parseCache;
@@ -241,6 +304,8 @@ export class Decorator {
     
     // Also clear ghost faint decoration (not in decorationTypeMap)
     this.activeEditor.setDecorations(this.decorationTypes.getGhostFaintDecorationType(), []);
+    this.mermaidDecorations.clear(this.activeEditor);
+    this.activeEditor.setDecorations(this.mermaidHoverIndicatorDecorationType, []);
   }
 
   /**
@@ -272,7 +337,7 @@ export class Decorator {
 
     // Parse document (uses cache if version unchanged)
     const version = document.version;
-    const { decorations, scopes, text } = this.parseDocument(document);
+    const { decorations, scopes, text, mermaidBlocks } = this.parseDocument(document);
 
     // Re-validate version before applying (race condition protection)
     if (document.version !== version) {
@@ -284,6 +349,7 @@ export class Decorator {
 
     // Apply decorations
     this.applyDecorations(filtered);
+    void this.updateMermaidDiagrams(mermaidBlocks, text, document.version);
   }
 
   /**
@@ -333,10 +399,171 @@ export class Decorator {
    * @param {TextDocument} document - The document to parse
    * @returns Parsed decorations and scopes
    */
-  private parseDocument(document: TextDocument): { decorations: DecorationRange[]; scopes: ScopeEntry[]; text: string } {
+  private parseDocument(document: TextDocument): {
+    decorations: DecorationRange[];
+    scopes: ScopeEntry[];
+    text: string;
+    mermaidBlocks: MermaidBlock[];
+  } {
     const entry = this.parseCache.get(document);
     const scopeEntries = this.buildScopeEntries(entry.scopes, entry.text);
-    return { decorations: entry.decorations, scopes: scopeEntries, text: entry.text };
+    return {
+      decorations: entry.decorations,
+      scopes: scopeEntries,
+      text: entry.text,
+      mermaidBlocks: entry.mermaidBlocks,
+    };
+  }
+
+  private async updateMermaidDiagrams(
+    mermaidBlocks: MermaidBlock[],
+    text: string,
+    documentVersion: number
+  ): Promise<void> {
+    if (!this.activeEditor) {
+      return;
+    }
+
+    const editor = this.activeEditor;
+    if (mermaidBlocks.length === 0) {
+      this.mermaidDecorations.clear(editor);
+      editor.setDecorations(this.mermaidHoverIndicatorDecorationType, []);
+      return;
+    }
+
+    const token = ++this.mermaidUpdateToken;
+    const theme = window.activeColorTheme.kind === ColorThemeKind.Dark ||
+      window.activeColorTheme.kind === ColorThemeKind.HighContrast
+      ? 'dark'
+      : 'default';
+    const fontFamily = workspace.getConfiguration('editor').get<string>('fontFamily');
+
+    const rangesByKey = new Map<string, Range[]>();
+    const dataUrisByKey = new Map<string, string>();
+    const indicatorRanges: Range[] = [];
+
+    const originalText = editor.document.getText();
+
+    // Deduplicate renders for identical keys during this update (parallel-safe).
+    const dataUriPromisesByKey = new Map<string, Promise<string>>();
+
+    const results = await mapWithConcurrency(
+      mermaidBlocks,
+      PERFORMANCE_CONSTANTS.MERMAID_MAX_CONCURRENCY,
+      async (block): Promise<{ key: string; range: Range; dataUri: string; indicatorRange: Range } | null> => {
+        // Early exit checks (token/version can change while we await renders).
+        if (token !== this.mermaidUpdateToken || editor.document.version !== documentVersion) {
+          return null;
+        }
+
+        if (this.isSelectionOrCursorInsideOffsets(block.startPos, block.endPos, text, editor.selections, editor.document)) {
+          return null;
+        }
+
+        const range = this.createRange(block.startPos, block.endPos, text);
+        if (!range) {
+          return null;
+        }
+
+        // Add indicator decoration at the start of the mermaid block content
+        // Place it at the beginning of the first line of content (after opening fence line).
+        const blockStart = mapNormalizedToOriginal(block.startPos, text);
+        const openingFenceLineEnd = originalText.indexOf('\n', blockStart);
+        const contentStart = openingFenceLineEnd !== -1 ? openingFenceLineEnd + 1 : blockStart;
+
+        const contentStartPos = editor.document.positionAt(contentStart);
+        // Create a small range (1 character) at the start of content for the indicator.
+        const line = editor.document.lineAt(contentStartPos.line);
+        const indicatorEndChar = Math.min(contentStartPos.character + 1, line.text.length);
+        const indicatorRange = new Range(
+          contentStartPos,
+          new Position(contentStartPos.line, indicatorEndChar)
+        );
+
+        const key = getMermaidBlockCacheKey(block, theme, fontFamily);
+
+        let dataUriPromise = dataUriPromisesByKey.get(key);
+        if (!dataUriPromise) {
+          dataUriPromise = (async () => {
+            try {
+              const svg = await renderMermaidSvg(block.source, { theme, fontFamily, numLines: block.numLines });
+              return svgToDataUri(svg);
+            } catch (error) {
+              console.warn('Mermaid render failed:', error instanceof Error ? error.message : error);
+              // Create error SVG to display instead of silently failing.
+              let errorMessage = 'Rendering failed';
+              if (error instanceof Error) {
+                errorMessage = error.message || error.toString() || 'Rendering failed';
+              } else if (typeof error === 'string') {
+                errorMessage = error;
+              } else {
+                errorMessage = String(error) || 'Rendering failed';
+              }
+              if (!errorMessage || errorMessage.trim().length === 0) {
+                errorMessage = 'Unknown rendering error occurred';
+              }
+              const errorSvg = createErrorSvg(
+                errorMessage,
+                Math.max(400, block.numLines * 20),
+                block.numLines * 20,
+                theme === 'dark'
+              );
+              return svgToDataUri(errorSvg);
+            }
+          })();
+          dataUriPromisesByKey.set(key, dataUriPromise);
+        }
+
+        const dataUri = await dataUriPromise;
+
+        if (token !== this.mermaidUpdateToken || editor.document.version !== documentVersion) {
+          return null;
+        }
+
+        return { key, range, dataUri, indicatorRange };
+      }
+    );
+
+    // Merge results sequentially (single apply at end).
+    for (const result of results) {
+      if (!result) {
+        continue;
+      }
+      dataUrisByKey.set(result.key, result.dataUri);
+      const ranges = rangesByKey.get(result.key) || [];
+      ranges.push(result.range);
+      rangesByKey.set(result.key, ranges);
+      indicatorRanges.push(result.indicatorRange);
+    }
+
+    if (token !== this.mermaidUpdateToken || editor.document.version !== documentVersion) {
+      return;
+    }
+
+    this.mermaidDecorations.apply(editor, rangesByKey, dataUrisByKey);
+    
+    // Apply hover indicator decorations
+    editor.setDecorations(this.mermaidHoverIndicatorDecorationType, indicatorRanges);
+  }
+
+  private isSelectionOrCursorInsideOffsets(
+    startPos: number,
+    endPos: number,
+    text: string,
+    selections: readonly Range[],
+    document: TextDocument
+  ): boolean {
+    const mappedStart = mapNormalizedToOriginal(startPos, text);
+    const mappedEnd = mapNormalizedToOriginal(endPos, text);
+
+    return selections.some((selection) => {
+      const selectionStart = document.offsetAt(selection.start);
+      const selectionEnd = document.offsetAt(selection.end);
+      if (selectionStart === selectionEnd) {
+        return selectionStart >= mappedStart && selectionStart <= mappedEnd;
+      }
+      return selectionStart <= mappedEnd && selectionEnd >= mappedStart;
+    });
   }
 
   /**
@@ -541,8 +768,9 @@ export class Decorator {
       this.idleCallbackHandle = undefined;
     }
     this.pendingUpdateVersion.clear();
-    
+
     this.decorationTypes.dispose();
+    this.mermaidHoverIndicatorDecorationType.dispose();
   }
 
   /**
