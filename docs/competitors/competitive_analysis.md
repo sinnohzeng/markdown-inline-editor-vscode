@@ -158,7 +158,7 @@ The VS Code marketplace contains **2,498+ extensions** matching "markdown wysiwy
 - They have Mermaid/LaTeX (we plan to add)
 - They have image rendering (we don't plan inline images)
 - We have better maintenance (active development)
-- We have more comprehensive test coverage (123+ tests)
+- We have more comprehensive test coverage (438+ tests across 33 test suites)
 - We have better documentation and contribution guidelines
 - We have better performance (no line count limits, intelligent caching)
 
@@ -240,7 +240,7 @@ The VS Code marketplace contains **2,498+ extensions** matching "markdown wysiwy
 | **Vim Support** | ✅ | ✅ | ✅ | ❌ | ❌ |
 | **Zero Config** | ✅ | ✅ | ✅ | ❌ | ❌ |
 | **Active Development** | ✅ | ⚠️ | ❌ | ❌ | ✅ |
-| **Test Coverage** | ✅ 123+ tests | ❌ | ❌ | ❌ | ❌ |
+| **Test Coverage** | ✅ 438+ tests (33 suites) | ❌ | ❌ | ❌ | ❌ |
 | **Performance** | ✅ Cached | ✅ | ✅ | ⚠️ | ⚠️ |
 
 **Legend:**
@@ -342,7 +342,7 @@ The VS Code marketplace contains **2,498+ extensions** matching "markdown wysiwy
 2. **Active Development**
    - Most competitors are stale or abandoned
    - Regular updates, bug fixes, feature additions
-   - Comprehensive test coverage (123+ tests)
+   - Comprehensive test coverage (438+ tests across 33 test suites)
 
 3. **Performance & Quality**
    - Intelligent caching, incremental updates
@@ -361,7 +361,7 @@ The VS Code marketplace contains **2,498+ extensions** matching "markdown wysiwy
 | **Native Editing** | ✅ | ❌ (webview/custom editors) |
 | **Syntax Hiding** | ✅ | ⚠️ (only Markless, but stale) |
 | **Active Development** | ✅ | ❌ (most are stale) |
-| **Test Coverage** | ✅ 123+ tests | ❌ (none have tests) |
+| **Test Coverage** | ✅ 438+ tests (33 suites) | ❌ (none have tests) |
 | **Zero Configuration** | ✅ | ⚠️ (some require setup) |
 | **Vim Support** | ✅ | ❌ (webview/custom editors) |
 | **Extension Compatibility** | ✅ | ❌ (webview/custom editors) |
@@ -387,7 +387,7 @@ The VS Code marketplace contains **2,498+ extensions** matching "markdown wysiwy
 ### 2. **Developer Experience**
 - **Current:** Comprehensive tests, good documentation
 - **Opportunity:** Add more developer tools, debugging features
-- **Competitive Edge:** No competitor has 123+ tests
+- **Competitive Edge:** No competitor has 438+ tests across 33 test suites
 
 ### 3. **GFM Compliance**
 - **Current:** Partial GFM support

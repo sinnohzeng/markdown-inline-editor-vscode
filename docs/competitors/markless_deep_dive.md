@@ -63,7 +63,7 @@ markless/
 | Aspect | Markless | Our Extension |
 |--------|----------|---------------|
 | **Language** | JavaScript | TypeScript |
-| **Testing** | No tests | 123+ comprehensive tests |
+| **Testing** | No tests | 438+ comprehensive tests (33 suites) |
 | **Code Organization** | Monolithic files | Modular architecture |
 | **Documentation** | Basic README | Comprehensive docs + AGENTS.md |
 | **Build System** | esbuild | TypeScript + esbuild |
@@ -332,7 +332,7 @@ function hideSyntax(node) {
 
 **Our Strengths:**
 - ✅ **Performance** - Intelligent caching, incremental updates
-- ✅ **Testing** - 123+ comprehensive tests
+- ✅ **Testing** - 438+ comprehensive tests across 33 test suites
 - ✅ **Maintenance** - Active development
 - ✅ **Documentation** - Comprehensive docs
 
@@ -427,7 +427,7 @@ function hideSyntax(node) {
 - **Manual testing only** - Bugs slip through
 
 **Our Extension:**
-- **123+ tests** - Comprehensive test coverage
+- **438+ tests (33 suites)** - Comprehensive test coverage
 - **CI/CD** - Automated testing on every commit
 - **Edge cases** - Tests for CRLF, large files, etc.
 
@@ -518,7 +518,7 @@ function hideSyntax(node) {
 |--------|----------|---------------|--------|
 | **Features** | ✅ Mermaid/LaTeX | 🚧 Planned | Markless (for now) |
 | **Performance** | ❌ Limited | ✅ Optimized | Ours |
-| **Code Quality** | ❌ No tests | ✅ 123+ tests | Ours |
+| **Code Quality** | ❌ No tests | ✅ 438+ tests (33 suites) | Ours |
 | **Maintenance** | ❌ Abandoned | ✅ Active | Ours |
 | **Documentation** | ❌ Minimal | ✅ Comprehensive | Ours |
 | **GFM Support** | ✅ Full | ⚠️ Partial | Markless |

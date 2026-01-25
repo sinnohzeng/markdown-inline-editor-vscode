@@ -56,7 +56,7 @@
 ## ✅ Already Superior to Markless
 
 - **Performance:** Intelligent caching, no line limits
-- **Code Quality:** 123+ tests, TypeScript, modular architecture
+- **Code Quality:** 438+ tests (33 suites), TypeScript, modular architecture
 - **Maintenance:** Active development, comprehensive docs
 - **Large Files:** Handles any size (Markless fails >500 lines)
 

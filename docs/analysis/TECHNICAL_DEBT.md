@@ -158,7 +158,7 @@ private logDebug(message: string, ...args: any[]): void {
 - ✅ Added comprehensive tests for hover providers (image and link)
 - ✅ Added tests for link click handler
 - ✅ Added tests for hover utilities (URL resolution, caching, diff view handling)
-- ✅ Current test count: 57+ passing tests across multiple test suites
+- ✅ Current test count: 438+ passing tests across 33 test suites
 
 **Related Files:**
 - `src/decorator/__tests__/`

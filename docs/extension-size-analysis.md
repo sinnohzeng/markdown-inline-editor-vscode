@@ -1,7 +1,7 @@
 # VS Code Extension Size Analysis
 
 **Analysis Date:** 2026-01-23  
-**Extension Version:** 1.11.1
+**Extension Version:** 1.12.0
 
 ## Summary
 

@@ -1,6 +1,6 @@
 ---
-status: TODO
-updateDate: 2024-12-19
+status: ✅ Implemented
+updateDate: 2026-01-25
 priority: High
 ---
 
@@ -8,11 +8,19 @@ priority: High
 
 ## Overview
 
-Inline SVG rendering for Mermaid diagrams in code blocks.
+Inline SVG rendering for Mermaid diagrams in code blocks with hover preview support for large diagrams.
 
 ## Implementation
 
-Detect ` ```mermaid` code blocks, render SVG inline using decorations (no hover).
+- **Detection**: Detects ` ```mermaid` code blocks during markdown parsing
+- **Rendering**: Renders SVG inline using VS Code decorations with data URIs
+- **Hover Preview**: Shows larger preview on hover with optimized SVG processing for large diagrams
+- **Error Handling**: Graceful error handling with informative error messages
+- **Theme Support**: Automatically adapts to VS Code theme (light/dark)
+- **Performance**: Caching and bounded parallelism for rendering
+- **SVG Optimization**: Aggressive optimization for large diagrams (path simplification, precision reduction, content optimization)
+- **Dimension Capping**: Limits hover preview size to reduce SVG complexity
+- **Dual Encoding**: URL encoding with Base64 fallback for large SVGs
 
 ## Acceptance Criteria
 
@@ -71,15 +79,14 @@ Feature: Reveal Mermaid diagram
 
 ## Notes
 
-- High user demand
-- Competitive requirement (markless has it but buggy)
-- Local rendering required (no CDN)
-- Rendering solution required (Node + JSDOM)
-- Feasibility: Moderate
-- Usefulness: High
-- Risk: Medium (rendering complexity)
-- Effort: 2-3 weeks
-- Rendering solution required (to be determined)
+- ✅ **Implemented**: Full inline rendering with hover preview support
+- Uses local Mermaid library (bundled with extension)
+- SVG rendering via Node.js with JSDOM
+- Comprehensive error handling and optimization
+- Theme-aware rendering (light/dark mode support)
+- Performance optimizations for large diagrams
+- See [ADR: Mermaid Diagram Hover Rendering](../architecture/ADR/mermaid.md) for implementation details
+- See [Mermaid Rendering Findings](../mermaid-rendering-findings.md) for technical details
 
 ## Examples
 

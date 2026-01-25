@@ -142,7 +142,7 @@ npm run release       # Automated release (see Release section)
 - Mock VS Code API when needed (see existing tests for patterns)
 
 **Current Test Coverage:**
-- 57+ passing tests across parser, hover providers, click handler
+- 438+ passing tests across 33 test suites (parser, hover providers, click handler, decorator, and more)
 - Maintain or improve this coverage
 
 ### 4. Code Style

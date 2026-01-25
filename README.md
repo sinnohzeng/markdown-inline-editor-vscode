@@ -123,6 +123,7 @@ The extension supports the following Markdown (and common GitHub-flavored) featu
 * [x] **Code Blocks** (`` ```lang ``) • [Details](docs/features/done/code-blocks.md)
 * [x] **YAML Frontmatter** • [Details](docs/features/done/yaml-frontmatter.md) • [Issue #27](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/27)
 * [x] **Emoji Support** (`:smile:`) • [Details](docs/features/done/emoji-support.md) • [Issue #30](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/30)
+* [x] **Mermaid Diagrams** (`` ```mermaid ``) • [Details](docs/features/done/mermaid-diagrams.md) • [Issue #26](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/26)
 
 ### Configuration
 * [x] **Show Raw Markdown in Diffs** • [Details](docs/features/done/show-raw-markdown-in-diffs.md) • [Issue #20](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/20)
@@ -151,7 +152,7 @@ All settings are under the `Markdown Inline Editor` section in VS Code Settings 
 ### High Priority
 * [ ] **Tables** • [Details](docs/features/todo/tables.md) • [Issue #23](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/23)
 * [ ] **Autolinks** • [Details](docs/features/todo/autolinks.md) • [Issue #24](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/24)
-* [ ] **Mermaid Diagrams** • [Details](docs/features/todo/mermaid-diagrams.md) • [Issue #26](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/26)
+* [x] **Mermaid Diagrams** • [Details](docs/features/done/mermaid-diagrams.md) • [Issue #26](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/26)
 * [ ] **LaTeX/Math** • [Details](docs/features/todo/latex-math.md) • [Issue #6](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/6)
 
 ### Medium Priority
@@ -243,7 +244,7 @@ src/
 
 ### Testing
 
-The project maintains comprehensive test coverage with **57+ passing tests** across multiple test suites:
+The project maintains comprehensive test coverage with **438+ passing tests** across 33 test suites:
 
 - **Parser tests** (`parser/__tests__/`) – Core markdown parsing logic
 - **Parse cache tests** (`markdown-parse-cache/__tests__/`) – Shared caching and LRU eviction
@@ -322,7 +323,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for full contribution guidelines and [`
 
 - **Ordered lists** – Currently displayed as-is (auto-numbering planned)
 - **Tables** – Table syntax hiding is in progress
-- **Mermaid diagrams** – Diagram rendering is in progress
+- **Mermaid diagrams** – ✅ Fully implemented with inline rendering and hover preview
 - **Math formulas** – KaTeX/MathJax support is planned
 - **H1 heading clipping** – Text goes out of window when H1 is on first line – [#4](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/4)
 
