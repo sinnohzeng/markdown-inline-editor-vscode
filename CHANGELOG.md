@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.0](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.12.0..v1.13.0) - 2026-01-25
+
+### Added
+
+- **(hover)** add code block hover preview with dynamic sizing - ([10c0dc4](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/10c0dc4daabdcfd1e265900537afd4278b9ac72a))
+- **(mermaid)** bundle Mermaid locally for offline support - ([9285fbf](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/9285fbf2fcbc4c26564d1fe304bf485a0d570d42))
+- **(mermaid)** add hover indicator and improve height calculation - ([ecca9e1](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/ecca9e1bdad7387bb3326382d0e90bf79438bdaf))
+- **(mermaid)** add error SVG display for rendering failures - ([7a1bc7e](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/7a1bc7e7fbeb6fefc9aee22d51838485993e3873))
+
+### Changed
+
+- **(bundle)** exclude TypeScript declaration files from package - ([27a1113](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/27a11137d9651d7b3ba416ce4ac440805f5ba2ae))
+- **(deps)** downgrade mermaid to v10.9.5 - ([41f3f51](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/41f3f514d087c732892dc73f95725fa27b2c4961))
+- **(deps)** update mermaid to 11.12.2 - ([58585ef](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/58585ef9774e7f0eaf4a635759dc38918c699860))
+- **(lint)** fix linting errors and warnings - ([641c5ce](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/641c5cea172f943cd66fc763a0ae3f6fd9ac06b6))
+- **(mermaid)** implement Phase 1 performance improvements - ([2092b72](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/2092b72d279930bd75b733b6c4cb5c36c119d555))
+- remove duplicate media directory to reduce extension size - ([edc3351](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/edc335125ccf09280b3ffeab946df250ed287c8b))
+- update feature documentation and test coverage references - ([e46613e](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/e46613eef86982580b26dc840a9d7be9712c2be8))
+
+### Fixed
+
+- **(config)** exclude examples folder from TypeScript checking - ([81abaf6](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/81abaf68acbf3b1e693808b108dc19a10f980f16))
+- **(hover)** convert Mermaid SVG to data URI for hover popup - ([2087f2d](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/2087f2d38a7f85a70d502bce72121db91c4d1006))
+- **(mermaid)** correct SVG extraction from cheerio processing - ([69765bf](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/69765bf812c08a8e8b77985cfda086433244fd31))
+- **(mermaid)** render gantt charts in explicit-width container to fix zero-width layout issue - ([ae88bb4](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/ae88bb4a28887120cb250b2f5360e12b6c496044))
+- **(mermaid)** resolve race condition in concurrent render requests - ([1c2fcb1](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/1c2fcb13fc8271f2eb08b565f68daa2a75b53b8c))
+- **(mermaid)** resolve memory leaks and improve hover rendering - ([0416a0d](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/0416a0d7000e60df470ea36bc3c3f114c945629d))
+- **(mermaid)** handle large SVG rendering in hover dialogs - ([9e21f75](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/9e21f75acdc11d44a0981f88f43df42074190e79))
+- **(parser)** prevent markdown formatting decorations inside code blocks - ([cd5f859](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/cd5f8598d5ca0705e5b6be1b86771cd6f363b1c1))
+
 ## [1.12.0](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.11.1..v1.12.0) - 2026-01-24
 
 ### Added
