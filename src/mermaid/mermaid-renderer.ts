@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { LRUCache } from '../utils/lru-cache';
 import { MermaidWebviewManager } from './webview-manager';
-import { processSvg, svgToDataUri } from './svg-processor';
+import { processSvg } from './svg-processor';
 import { createErrorSvg, extractErrorMessage } from './error-handler';
 import { MERMAID_CONSTANTS } from './constants';
 import type { MermaidRenderOptions } from './types';

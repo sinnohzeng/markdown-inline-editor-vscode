@@ -1,5 +1,3 @@
-import * as vscode from 'vscode';
-
 /**
  * Options for rendering Mermaid diagrams
  */

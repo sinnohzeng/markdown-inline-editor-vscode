@@ -18,7 +18,7 @@ export function getEmojiMap(): Record<string, string> {
   if (emojiByShortcode === null) {
     // Use require - works in VS Code extension CommonJS context
     // For Jest, ts-jest transforms the module so require() works
-    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const emojiMapModule = require("./emoji-map");
     emojiByShortcode = emojiMapModule.emojiByShortcode;
   }

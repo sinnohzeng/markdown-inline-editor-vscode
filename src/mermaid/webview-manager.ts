@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { ColorThemeKind } from 'vscode';
-import type { PendingRender, RenderRequest, RenderResponse } from './types';
+import type { PendingRender, RenderResponse } from './types';
 import { MERMAID_CONSTANTS } from './constants';
 import { createErrorSvg } from './error-handler';
 
@@ -208,7 +208,8 @@ export class MermaidWebviewManager {
       const { resolve, timeoutId } = this.pendingRenders.get(requestId)!;
       // Clear timeout since we received the response
       clearTimeout(timeoutId);
-      const svg = message.svg || (message as any); // Support both object and string format
+      // message.svg should always be present for RenderResponse with requestId
+      const svg = message.svg || '';
       resolve(svg);
       this.pendingRenders.delete(requestId);
       return;
