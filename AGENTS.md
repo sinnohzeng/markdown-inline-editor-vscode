@@ -296,13 +296,27 @@ This runs:
    - Updates package.json version
    - Commits and tags release
 
-4. **Push:**
+4. **Push (CRITICAL - Tags MUST be pushed):**
    ```bash
    git push origin main --follow-tags
+   ```
+   
+   **⚠️ IMPORTANT:** The `--follow-tags` flag is essential! Without it, tags won't be pushed and releases won't be processed by CI/CD.
+   
+   **Verify tags were pushed:**
+   ```bash
+   git ls-remote --tags origin | grep v<version>
+   ```
+   
+   If tags are missing, push them explicitly:
+   ```bash
+   git push origin v<version>
    ```
 
 5. **CI/CD:**
    - GitHub Actions automatically publishes to VS Code Marketplace and OpenVSX
+   - **Releases only process if tags are pushed to remote**
+   - Check GitHub Actions to verify release jobs ran successfully
 
 See `docs/release-generation.md` for detailed documentation.
 
