@@ -20,8 +20,8 @@
 
 ## Demo
 
-<p align="center" style="max-width:95%; margin-left:auto; margin-right:auto;">
-  <img src="assets/autoplay-demo.gif" alt="Markdown Inline Editor Demo" width="95%"><br>
+<p align="center" style="max-width:66%; margin-left:auto; margin-right:auto;">
+  <img src="assets/autoplay-demo.gif" alt="Markdown Inline Editor Demo" width="100%"><br>
   <span style="display:block; font-size:90%; color:#888; margin-top:8px;">
     <em>Figure: Interactive demo—see formatting applied inline, reveal raw Markdown with a click, and watch the extension adapt instantly to color theme changes.</em>
   </span>
@@ -30,9 +30,9 @@
 ## Video Demos
 
 <p align="center" style="max-width:100%; margin-left:auto; margin-right:auto;">
-  <video src="assets/demo-1.webm" controls width="30%" style="margin: 0 1%; max-width:100%; height:auto; border-radius:4px;"></video>
-  <video src="assets/demo-2.webm" controls width="30%" style="margin: 0 1%; max-width:100%; height:auto; border-radius:4px;"></video>
-  <video src="assets/demo-3.webm" controls width="30%" style="margin: 0 1%; max-width:100%; height:auto; border-radius:4px;"></video>
+  <video src="assets/demo-1.webm" controls width="46%" style="margin: 0 1%; max-width:100%; height:auto; border-radius:4px;"></video>
+  <video src="assets/demo-2.webm" controls width="46%" style="margin: 0 1%; max-width:100%; height:auto; border-radius:4px;"></video>
+  <video src="assets/demo-3.webm" controls width="46%" style="margin: 0 1%; max-width:100%; height:auto; border-radius:4px;"></video>
 </p>
 <p align="center">
   <em style="font-size:90%; color:#888;">Left: [Video 1 description]</em> • 
