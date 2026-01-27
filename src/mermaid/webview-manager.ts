@@ -48,14 +48,15 @@ export class MermaidWebviewManager {
 
     // Open the mermaid view briefly to initialize it, then switch back
     // This is needed because the webview won't be created until it's visible
-    vscode.commands.executeCommand('mdInline.mermaidRenderer.focus')
+    // We immediately switch away to minimize visibility of the activity bar button
+    vscode.commands.executeCommand('workbench.view.extension.mdInlineRenderer')
       .then(() => {
-        // Switch back to explorer after a brief moment
+        // Switch back to explorer immediately after webview is created
         // Store timeout ID for cleanup
         this.initTimeoutId = setTimeout(() => {
           vscode.commands.executeCommand('workbench.view.explorer');
           this.initTimeoutId = undefined;
-        }, 100);
+        }, 50);
       });
   }
 
@@ -81,8 +82,41 @@ export class MermaidWebviewManager {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <style>
+    body {
+      font-family: var(--vscode-font-family);
+      color: var(--vscode-foreground);
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .info-box {
+      background: var(--vscode-editor-background);
+      border: 1px solid var(--vscode-panel-border);
+      border-radius: 4px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .info-box h3 {
+      margin-top: 0;
+      color: var(--vscode-textLink-foreground);
+    }
+    .info-box p {
+      margin: 8px 0;
+      color: var(--vscode-descriptionForeground);
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
 </head>
 <body>
+  <div class="info-box">
+    <h3>Mermaid Diagram Renderer</h3>
+    <p>This webview is used internally by the Markdown Inline Editor extension to render Mermaid diagrams inline in your markdown files.</p>
+    <p><strong>You can safely ignore this view.</strong> It runs in the background and has no user-facing functionality. The diagrams appear directly in your editor, not here.</p>
+    <p>If you're seeing this view, you can close it and return to your editor. The extension will continue to work normally.</p>
+  </div>
+  <div id="renderContainer" class="hidden"></div>
   <script type="module">
     import mermaid from '${mermaidScriptUri}';
     

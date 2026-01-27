@@ -338,6 +338,7 @@ See [`CONTRIBUTING.md`][contributing] for full contribution guidelines and [`AGE
 - **Ordered list auto-numbering** – Planned (numbers remain visible today) • [Issue #31](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/31)
 - **H1 heading clipping** – Text can go out of window when H1 is on first line • [#4](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/4)
 - **Very large files** – Files over ~1MB may parse more slowly (see [FAQ][faq])
+- **Sidebar button** – A "Markdown Inline" button appears in the activity bar for Mermaid rendering (hidden webview). You can ignore it—it's not interactive. See [FAQ][faq] for details.
 
 ### Reporting Bugs
 

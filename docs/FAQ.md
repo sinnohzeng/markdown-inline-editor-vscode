@@ -7,6 +7,14 @@
 3. **Reload window** – `Ctrl/Cmd+Shift+P` → "Developer: Reload Window"
 4. **Check extension status** – Verify extension is activated in the Extensions view
 
+## Why is there a sidebar button in the activity bar?
+
+The extension adds a "Markdown Inline" button in VS Code's activity bar (left sidebar). This button hosts a hidden webview that's required for rendering Mermaid diagrams inline. The webview is never visible to you—it runs in the background to process Mermaid code blocks.
+
+**You can safely ignore this button.** It doesn't provide any user-facing functionality and is purely a technical requirement for Mermaid diagram rendering. The button appears because VS Code requires a view container for webviews, even when they're hidden.
+
+If you don't use Mermaid diagrams, the button still appears but remains inactive.
+
 ## Performance Issues?
 
 - **Large files** – Files over 1MB may experience slower parsing

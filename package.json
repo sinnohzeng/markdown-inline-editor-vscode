@@ -58,8 +58,8 @@
       "activitybar": [
         {
           "id": "mdInlineRenderer",
-          "title": "Markdown Inline",
-          "icon": "$(markdown)"
+          "title": "",
+          "icon": "assets/activityBar.svg"
         }
       ]
     },
@@ -68,7 +68,7 @@
         {
           "type": "webview",
           "id": "mdInline.mermaidRenderer",
-          "name": "",
+          "name": "Mermaid Renderer",
           "visibility": "hidden"
         }
       ]
