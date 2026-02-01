@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.15.3](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.15.2..v1.15.3) - 2026-02-01
+
+### Fixed
+
+- **(decorations)** use ☑ for checked checkbox to fix blank rectangle ([#47](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/47)) - ([bf507e4](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/bf507e4a49aca129482d8e763b3759e6fbde9fda))
+
 ## [1.15.2](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.15.1..v1.15.2) - 2026-02-01
 
 ### Fixed
