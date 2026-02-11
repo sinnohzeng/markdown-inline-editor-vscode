@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.16.0](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.15.3..v1.16.0) - 2026-02-11
+
+### Added
+
+- **(parser)** show only checkbox for task list items, not bullet - ([37a2818](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/37a281851e761ae6e953f0fa985cdffde62af25b))
+
+### Changed
+
+- **(markdown)** add global toggle for default decorator rendering behavior - ([a4aa998](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/a4aa998df37660abdec659f21b2e388fc2e85a85))
+
 ## [1.15.3](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.15.2..v1.15.3) - 2026-02-01
 
 ### Fixed
