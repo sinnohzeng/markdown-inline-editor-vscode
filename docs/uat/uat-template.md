@@ -63,6 +63,28 @@ Here's an image: ![Alt text](image.png)
 - [x] Completed task
 - [ ] Unchecked task
 - [x] Clickable checkbox list item
+- [] Unchecked (GFM, missing space)
+-[ ] Unchecked (GFM, missing left space)
+- [ ] Unchecked, extra space after bracket
+- [ x] Checked, extra space before "x"
+- [X] Checked, uppercase X
+- [ ] multiple   spaces after box
+- [ ]	Tabbed space after box
+- [  ] Blank space between brackets (not valid GFM)
+- [y] alpha instead of x -- should not check (not valid)
+- [*] asterisk instead of x -- should not check (not valid)
+- [ 	x] Tab and space
+- [x ] Checked, space after x
+- [X ] Checked, uppercase X, space after X
+- [  x ] Checked, multiple spaces before x and after
+- [] Not checked, GFM empty box, no space after bracket
+-	[ ] Indented unchecked checkbox (GFM)
+1. [x] Numbered task
+2. [ ] Numbered task, unchecked
+- [x] Task inside list (checked)
+- [ ] Task inside list (unchecked)
+- [x] Task with emoji :tada: checked
+- [ ] Task with emoji :cry: unchecked
 
 > This is a blockquote with **bold** text
 > Nested blockquote root
