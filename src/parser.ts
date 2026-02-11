@@ -1189,15 +1189,20 @@ export class MarkdownParser {
     const start = node.position!.start.offset!;
     const end = node.position!.end.offset!;
 
-    // Detect autolinks and bare links using AST structure: link text equals the URL
-    // (or URL without mailto: prefix for email autolinks)
-    const firstChild = node.children?.[0];
-    const linkText = (firstChild && firstChild.type === "text") ? firstChild.value : "";
-    const url = node.url || "";
-    const urlWithoutMailto = url.replace(/^mailto:/, "");
-    const isAutolinkOrBareLink = linkText === url || linkText === urlWithoutMailto;
+    // Explicit bracket-style link [text](url): always use regular link rendering so that
+    // [bob@email.com](mailto:bob@email.com) and [url](url) hide delimiters and URL.
+    if (text[start] === "[") {
+      // Fall through to "Regular bracket-style link" path below.
+    } else {
+      // Detect autolinks and bare links using AST structure: link text equals the URL
+      // (or URL without mailto: prefix for email autolinks)
+      const firstChild = node.children?.[0];
+      const linkText = (firstChild && firstChild.type === "text") ? firstChild.value : "";
+      const url = node.url || "";
+      const urlWithoutMailto = url.replace(/^mailto:/, "");
+      const isAutolinkOrBareLink = linkText === url || linkText === urlWithoutMailto;
 
-    if (isAutolinkOrBareLink) {
+      if (isAutolinkOrBareLink) {
       // Check if it's an autolink (has angle brackets) or bare link (no brackets)
       const hasAngleBrackets = text[start] === '<' && text[end - 1] === '>';
 
@@ -1253,6 +1258,7 @@ export class MarkdownParser {
         this.addScope(scopes, start, end, "link");
       }
       return;
+    }
     }
 
     // Regular bracket-style link: [text](url)

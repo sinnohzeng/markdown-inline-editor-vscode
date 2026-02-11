@@ -656,3 +656,144 @@ UAT-CHECK()
 UAT-CHECK()
 foo~~bar~~baz (strikethrough in middle of word) 
 UAT-CHECK()
+
+<!--
+UAT for Issue #24: Autolinks – Hide angle brackets for URLs and email addresses in GFM.
+
+Test the following:
+- Autolink angle brackets are hidden when not selected.
+- Link is clickable (http(s) → browser, email → mailto).
+- When selected, angle brackets and raw markdown show.
+- Only true autolinks affected, not normal brackets/text.
+- Multiple/adjacent autolinks work.
+-->
+
+## Autolink URL (GFM)
+
+<https://example.com>
+UAT-CHECK()
+
+<http://example.com/path?query=1&other=2>
+UAT-CHECK()
+
+Some text before <https://www.github.com> and after.
+UAT-CHECK()
+
+<https://example.com> <https://github.com> — two in a row!
+UAT-CHECK()
+
+Start<https://a.co>End (touching words)
+UAT-CHECK()
+
+Parenthetical (<https://inside-parentheses.com>)
+UAT-CHECK()
+
+## Autolink Email
+
+<user@example.com>
+UAT-CHECK()
+
+<user+plus@example.com>
+UAT-CHECK()
+
+Contact: <firstname.lastname@domain.priv>
+UAT-CHECK()
+
+## Mixed Content: Only Autolinks Affected
+
+Here is `<not a link>` and <https://really.a/link>.
+UAT-CHECK()
+
+Email: <example@site.com>, also see <https://site.com/docs>.
+UAT-CHECK()
+
+This should NOT hide: 5 < 7 and > should render as math/comparisons.
+UAT-CHECK()
+
+## Selection: Reveal Raw
+
+(Manual UAT)
+- Place cursor on or select each autolink above: angle brackets should appear (raw markdown shown).
+- Deselect or move cursor out: brackets disappear, rendering returns to nice clickable link.
+
+## Edge: Multiple in Same Paragraph
+
+See <https://one.com> and <https://two.org> in a sentence.
+UAT-CHECK()
+
+Emails: <a@example.com> or <b@example.com> for support.
+UAT-CHECK()
+
+## Edge: Non-autolink Brackets Must Not Hide
+
+Angle brackets not in autolink:
+- <b>some html</b>
+- 3 < 4 and 5 > 4
+UAT-CHECK()
+
+## Edge: In List & Blockquote
+
+- Site 1: <https://one.org>
+- Site 2: <https://two.org>
+UAT-CHECK()
+
+> Refer: <reference@example.com>
+UAT-CHECK()
+
+## Edge: Inline code should NOT trigger
+
+`<https://not-autolink.com>`
+UAT-CHECK()
+
+`<user@example.com>`
+UAT-CHECK()
+
+## Edge: Email with dash, underscore, period, plus
+
+<first.last_test+xyz-123@sub.domain.example.co.uk>
+UAT-CHECK()
+
+<!--
+csforbes: Demonstrating correct rendering of explicit [title](mailto:email) markdown links.
+Goal: These should display and behave as standard markdown links, *not* as autolinks in angle brackets.
+Use case: He wants clickable "mailto:" or web links for collaborators using regular markdown renderers. 
+-->
+
+## Edge: Explicit [title](mailto:email) links must render as normal markdown
+
+Example visual comparison:
+
+Raw markdown:
+```
+<https://github.com>  
+[GitHub](https://github.com)  
+<bob@email.com>  
+[Bob Email](mailto:bob@email.com)  
+[bob@email.com](mailto:bob@email.com)
+```
+
+Rendered output:
+
+<https://github.com>  
+[GitHub](https://github.com)  
+<bob@email.com>  
+[Bob Email](mailto:bob@email.com)  
+[bob@email.com](mailto:bob@email.com)
+
+---
+
+Email: [bob@email.com](mailto:bob@email.com)
+UAT-CHECK()
+// Expectation: The text "bob@email.com" should be shown as a regular clickable markdown link, *not* as an autolink in angle brackets. The link should use a mailto: scheme and should not reveal or hide any angle brackets on selection.
+
+Multiple links: [alice@email.com](mailto:alice@email.com), [website](https://site.com)
+UAT-CHECK()
+// Expectation: Both "alice@email.com" and "website" are standard markdown links (one mailto, one web). Both should render as normal blue clickable links, with no angle brackets appearing or hiding on interaction.
+
+- Use [support@service.test](mailto:support@service.test) to contact us.
+UAT-CHECK()
+// Expectation: The "support@service.test" address in the list item should appear as a standard markdown mailto link. No autolinking, no angle bracket display or disappearance on selection.
+
+> Contact: [team@acme.org](mailto:team@acme.org)
+UAT-CHECK()
+// Expectation: Inside the blockquote, "team@acme.org" should be a normal mailto link, styled per markdown rules. No angle brackets; behaves like a standard blockquote link.

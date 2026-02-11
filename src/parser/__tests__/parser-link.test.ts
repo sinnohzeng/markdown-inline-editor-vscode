@@ -96,6 +96,40 @@ describe('MarkdownParser - Links', () => {
     });
   });
 
+  describe('bracket-style link where label equals URL or email', () => {
+    it('should render [user@example.com](mailto:user@example.com) as regular link (hide delimiters and URL)', () => {
+      const markdown = '[user@example.com](mailto:user@example.com)';
+      const result = parser.extractDecorations(markdown);
+
+      const linkDec = result.find(d => d.type === 'link');
+      expect(linkDec).toBeDefined();
+      expect(linkDec?.startPos).toBe(1);
+      expect(linkDec?.endPos).toBe(17); // "user@example.com" between brackets
+      expect(linkDec?.url).toBe('mailto:user@example.com');
+
+      const hideDecs = result.filter(d => d.type === 'hide');
+      expect(result.some(d => d.type === 'hide' && d.startPos === 0)).toBe(true); // [
+      expect(result.some(d => d.type === 'hide' && d.startPos === 17)).toBe(true); // ]
+      expect(result.some(d => d.type === 'hide' && d.startPos === 18)).toBe(true); // (
+      expect(hideDecs.length).toBe(5); // [, ], (, URL content, )
+    });
+
+    it('should render [https://example.com](https://example.com) as regular link', () => {
+      const markdown = '[https://example.com](https://example.com)';
+      const result = parser.extractDecorations(markdown);
+
+      const linkDec = result.find(d => d.type === 'link');
+      expect(linkDec).toBeDefined();
+      expect(linkDec?.startPos).toBe(1);
+      expect(linkDec?.url).toBe('https://example.com');
+
+      // Bracket-style: opening [ and delimiters/URL must be hidden
+      expect(result.some(d => d.type === 'hide' && d.startPos === 0)).toBe(true); // [
+      const hideDecs = result.filter(d => d.type === 'hide');
+      expect(hideDecs.length).toBeGreaterThanOrEqual(4);
+    });
+  });
+
   describe('multiple links in same line', () => {
     it('should handle multiple links', () => {
       const markdown = '[one](url1) and [two](url2)';
