@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.17.0](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.16.2..v1.17.0) - 2026-03-08
+
+### Added
+
+- **(config)** add image, horizontalRule, checkbox color settings - ([75d601e](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/75d601e3f30a19bdc5e8b64ecaecb94b9fa58dc0))
+
+### Changed
+
+- **(deps)** npm audit fix - resolve high/moderate vulnerabilities - ([b3a8965](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/b3a89654fa2ba13126665503a9078b9afee258ad))
+- **(speckit)** add constitution, product spec, implementation plan, and tasks - ([46a2136](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/46a21369bcdc5d66b0e517db79685d4963bc6997))
+- document customizable syntax colors in README; react to colors config and theme in extension - ([ee79d9e](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/ee79d9eacc1763f5cbefe6dc10a25cf2cb3b52ed))
+
 ## [1.16.2](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.16.1..v1.16.2) - 2026-02-11
 
 ### Fixed
