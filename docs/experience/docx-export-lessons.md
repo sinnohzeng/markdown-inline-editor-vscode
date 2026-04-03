@@ -1,122 +1,74 @@
-# DOCX 导出功能开发经验
+# DOCX 导出：踩过的坑和做对的事
 
-> 日期：2026-04-03
+> 2026-04-03 开发记录
 
-## 成功经验
+## 做对的事
 
-### 1. 选择 `docx` npm 包而非 Pandoc
+### 选 `docx` npm 包，不选 Pandoc
 
-- **决策理由**：Pandoc 需要用户额外安装，且会注入约 30 个冗余语法高亮样式（AlertTok、AnnotationTok 等），即使文档中没有代码块
-- **结果**：`docx` 包只输出显式定义的样式，最终 DOCX 只有 7 个干净的中文命名样式
-- **教训**：对于 VS Code 扩展，纯 JS 方案始终优于外部二进制依赖
+Pandoc 功能强大，但对 VS Code 扩展来说有两个硬伤：一是用户必须自己装 Pandoc，二是它会往 `styles.xml` 里塞进约 30 个语法高亮的样式（AlertTok、AnnotationTok 之类），哪怕文档里一行代码都没有。`docx` 包只输出你亲手定义的样式，干净利落。
 
-### 2. 使用 Word 内建样式 ID
+### 核心转换做成纯函数
 
-- **问题**：最初计划使用自定义样式 ID（如 `"公文标题"`）
-- **发现**：Word 的 TOC field code、导航窗格、大纲视图只识别内建 ID（`Title`、`Heading1` 等）
-- **方案**：使用内建 `id` + 中文 `name` 显示名，两全其美
-- **教训**：OOXML 样式的 `id` 是机器识别的，`name` 是人看的，不要混淆
+`ast-to-docx.ts` 不引入任何 VS Code API——拿到语法树和图片 buffer，直接出 Word 文档对象。好处是 Jest 直接测，不用启动 Extension Development Host。VS Code 扩展里凡是能抽成纯函数的逻辑，都该抽出来。
 
-### 3. OOXML rFonts 四槽位机制
+### 图片尺寸自己读，不装额外的包
 
-- **发现**：Word 按字符 Unicode 范围自动选择 `eastAsia`/`ascii`/`hAnsi`/`cs` 字体
-- **好处**：中英混排时只需在样式中声明一次，无需逐字符切换
-- **教训**：`docx` 库的 `font` 属性支持对象格式 `{ eastAsia, ascii, hAnsi }`，直接映射到 OOXML
+PNG 的宽高藏在 IHDR chunk 里（byte 16-23），JPEG 的藏在 SOF marker 里。手写几十行解析代码，就省掉了 `sharp` 或 `image-size` 这类 native 依赖。VS Code 扩展跨平台跑，native 包越少越安心。
 
-### 4. 纯函数架构分层
+### 字体常量按字体本身命名
 
-- **设计**：`ast-to-docx.ts` 零 VS Code 依赖，是纯 AST → docx 映射
-- **好处**：可以直接用 Jest 测试，不需要 VS Code 测试环境
-- **教训**：VS Code 扩展中应尽量将业务逻辑抽离为纯函数
+最初写成 `FONT_HEADING_H1`、`FONT_HEADING_H2`，后来发现不对——一种字体可能用在好几个地方，按标题级别命名就绑死了。改成 `HeiTi`、`KaiTi`、`FangSong`、`SongTi`、`XiaoBiaoSong`，一眼就知道是什么字体。
 
-### 5. 图片尺寸快速读取
+中间还试过中文变量名（`黑体`、`楷体`），TypeScript 语法上没问题，但工具链兼容性和团队协作是隐患，最终用了拼音 PascalCase。
 
-- **方案**：直接解析 PNG IHDR chunk（byte 16-23）和 JPEG SOF marker
-- **好处**：避免依赖 `sharp` 或 `image-size` 等 native 包（在 VS Code 扩展中 native 依赖有兼容性风险）
-- **教训**：对于简单需求，手写二进制解析比引入新依赖更可靠
+---
 
-## 踩坑经验
+## 踩过的坑
 
-### 1. VS Code 编辑器不支持 `text-align: justify`
+### Word 样式重复——`w:name` 才是命门
 
-- **背景**：用户希望在编辑器中实现两端对齐
-- **调研结果**：VS Code 的 `TextEditorDecorationType` 只支持字符级 CSS，不支持块级布局属性
-- **结论**：这是 Monaco Editor 的架构限制，无法通过扩展解决。DOCX 导出功能正好弥补了这个缺口
+用 `paragraphStyles` 定义样式时，写了 `id: "Heading1"` 和 `name: "一级标题"`。结果 Word 里同时冒出来"标题 1"和"一级标题"两个样式。
 
-### 2. `docx` 库的尺寸单位
+原因：Word 不看 `w:styleId`，它看 `w:name`。`w:name` 写的是"一级标题"，Word 不认为它是内建样式，就当作新样式处理了。而内建的"标题 1"（`w:name="heading 1"`）照常存在。
 
-- **半磅（half-point）**：字号用半磅，16pt = 32
-- **twip**：行距和缩进用 twip（1/20 磅），28pt = 560 twip
-- **mm 到 twip**：使用 `convertMillimetersToTwip()` 转换
-- **教训**：OOXML 的单位系统很混乱，必须用命名常量消除 magic number
+改用 `styles.default.heading1` API 就好了——这个 API 保留 `w:name="heading 1"` 不变，只覆盖字体、字号等格式属性。中文版 Word 自动把"heading 1"显示为"标题 1"。
 
-### 3. GB/T 9704 行距计算
+一句话总结：**`w:styleId` 是文档内部的引用键，`w:name` 才是 Word 识别内建样式的依据。**
 
-- **标准要求**：每页 22 行，版心高度 225mm
-- **理论值**：225mm / 22 = 10.227mm/行 = 28.96pt
-- **实际值**：固定行距 28pt（略小于理论值，但实践中最可靠）
-- **教训**：公文排版不能照搬理论计算，要以实际效果为准
+### 公文标题继承了全局缩进
 
-### 4. macOS 字体差异
+在 `styles.default.document`（相当于 Normal 样式）里设了全局首行缩进 2 字符。Title 样式本该居中，结果居中之后还带着缩进，整个标题偏了。
 
-- **Windows**：`FangSong`、`SimHei`、`KaiTi` 是系统自带
-- **macOS**：没有 `FangSong`，对应的是 `STFangsong`（华文仿宋）
-- **方案**：在 OOXML 中使用 Windows 字体名，Word/WPS 会自动回退到 macOS 对应字体
-- **教训**：不需要在代码中做平台判断，让 Word 引擎处理回退
+Word 的样式继承规则：子样式只有显式设定的属性才会覆盖父级。你不写 `indent: { firstLine: 0 }`，它就老老实实继承父级的 640 twip。
 
-### 5. esbuild 单 bundle vs 分离 chunk
+### 页码的一字线不是英文短横线
 
-- **最初计划**：将 `docx` 包构建为独立 chunk，延迟加载
-- **实际发现**：V8 引擎使用惰性解析，模块代码在首次执行时才完全编译；`docx` 模块只在用户触发导出时才被调用
-- **结论**：单 bundle 已经具备运行时延迟效果，拆分 chunk 增加的构建复杂度不值得
-- **教训**：不要过度优化；先测量，再优化
+GB/T 9704 说"数字左右各放一条一字线"。一字线是占一个汉字宽度的横线，对应 Unicode 的 Em Dash `—`（U+2014），不是键盘上的短横线 `-`（U+002D）。
 
-## 项目决策记录
+### `docx` 库的单位换算
 
-| 决策 | 选择 | 替代方案 | 理由 |
-|------|------|---------|------|
-| DOCX 生成库 | `docx` npm | Pandoc、html-to-docx | 零外部依赖、样式干净、CJK 原生支持 |
-| 样式覆盖方式 | `styles.default.headingN` | `paragraphStyles` + 自定义 name | 前者覆盖内建样式，后者会创建重复 |
-| 字体编码 | 非 GB2312 | GB2312 后缀 | 用户明确要求 |
-| Bundle 策略 | 单 bundle | 分离 chunk | 复杂度不值得 |
-| 图片尺寸 | 手写解析 | image-size 包 | 避免 native 依赖 |
-| 强调样式 | 楷体（不加粗） | 黑体 / CSS bold | 黑体太重，楷体更柔和；公文不用粗体强调 |
-| 公文标题字体 | 方正小标宋简体 | 华文中宋 | GB/T 9704 标准指定字体 |
+字号用半磅——16pt 写成 32。行距和缩进用 twip（一磅的二十分之一）——28pt 写成 560。毫米转 twip 有现成的 `convertMillimetersToTwip()` 函数。这套单位体系很容易出错，全靠命名常量兜底。
 
-## 关键踩坑：Word 样式重复
+### macOS 没有仿宋
 
-**问题**：使用 `paragraphStyles` + `id: "Heading1"` + `name: "一级标题"` 时，Word 同时显示内建"标题 1"和自定义"一级标题"。
+Windows 上 `FangSong` 是系统字体，macOS 上不存在。但不用在代码里做平台判断——Word 自有一套字体回退机制，会自动找到 `STFangsong`（华文仿宋）。黑体回退到 Heiti SC，楷体回退到 Kaiti SC，都是 Word 自己处理的。
 
-**根因**：Word 通过 `w:name`（不是 `w:styleId`）识别内建样式。`w:name="一级标题"` 被 Word 当作全新自定义样式。
+### 不需要拆分 bundle
 
-**修复**：改用 `styles.default.heading1` API，它保留 `w:name="heading 1"`，Word 识别为内建样式的覆盖。中文 Word 自动显示为"标题 1"。
+本来打算把 `docx` 包构建成独立 chunk 做延迟加载。后来想明白了：esbuild 的 CJS 输出里，每个模块都是惰性初始化的，只有在首次 `require()` 时才执行。`docx` 模块只在用户点击导出按钮后才会被触发，单 bundle 已经自带延迟效果。拆分只增加了构建复杂度，没有实际收益。
 
-**教训**：`w:styleId` 是文档内部引用键，`w:name` 才是 Word 识别内建样式的依据。
+---
 
-## 关键踩坑：Title 继承全局首行缩进
+## 决策一览
 
-**问题**：公文标题（Title）虽然设了 `alignment: CENTER`，但仍然有首行缩进，导致居中偏移。
-
-**根因**：`styles.default.document` 中设了全局 `indent: { firstLine: 640 }`，Title 样式继承了这个属性，但没有显式覆盖。
-
-**修复**：在 Title 样式中显式设 `indent: { firstLine: 0 }`。
-
-**教训**：Word 样式继承中，子样式只有显式设定的属性才会覆盖父级。如果父级设了缩进，子级必须主动设 0 来取消。
-
-## 关键踩坑：页码一字线字符
-
-**问题**：初始用英文短横线 `-`（U+002D），实际应该是 Em Dash `—`（U+2014）。
-
-**根因**：GB/T 9704 说"一字线"——指占一个汉字宽度的横线，不是英文标点。
-
-**修复**：改为 `\u2014`（Em Dash）。
-
-## 关键踩坑：字体变量命名
-
-**问题**：最初用 `FONT_HEADING_H1`、`FONT_HEADING_H2` 命名——按标题级别命名字体常量不优雅。
-
-**尝试过中文变量名**：`黑体`、`楷体` 等。虽然 TS 支持，但不符合行业最佳实践（工具链兼容性、团队协作）。
-
-**最终方案**：拼音 PascalCase——`HeiTi`、`KaiTi`、`FangSong`、`SongTi`、`XiaoBiaoSong`、`CodeFont`。直接表达字体身份，ASCII 兼容。
-
-**教训**：字体常量应按字体本身命名，不按使用场景命名。一个字体可能用于多个场景。
+| 事项 | 选了什么 | 没选什么 | 为什么 |
+|------|---------|---------|--------|
+| DOCX 生成 | `docx` npm | Pandoc | 零依赖、样式干净 |
+| 样式覆盖 | `styles.default.headingN` | `paragraphStyles` + 自定义 name | 避免样式重复 |
+| 字体编码 | 现代字体名 | `_GB2312` 后缀 | 用户要求 |
+| 公文标题 | 方正小标宋简体 | 华文中宋 | 国标指定字体 |
+| 强调样式 | 楷体，不加粗 | 黑体 / CSS bold | 楷体更柔和，公文不靠粗细区分 |
+| 图片尺寸 | 手写 PNG/JPEG 解析 | `image-size` 包 | 避免 native 依赖 |
+| Bundle | 单 bundle | 分离 chunk | 复杂度不值得 |
+| 变量命名 | 拼音 PascalCase | 中文变量名 / 按标题级别命名 | 兼顾可读性和工具链兼容 |
