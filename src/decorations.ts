@@ -307,7 +307,7 @@ export function HeadingDecorationType() {
  * Default body text font configuration.
  * Uses Times New Roman for English, Source Han Serif SC / Noto Serif SC for Chinese.
  */
-const BODY_DEFAULT_FONT_FAMILY = '"Songti SC", "Source Han Serif SC", "Noto Serif CJK SC", "SimSun", serif';
+const BODY_DEFAULT_FONT_FAMILY = '"Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "SimSun", serif';
 const BODY_DEFAULT_FONT_WEIGHT = 'normal';
 /**
  * Default body font size — 100% (no enlargement via decoration).
@@ -336,7 +336,7 @@ const BODY_DEFAULT_LINE_HEIGHT = '1.8';
  *   H6 = 备用
  */
 const HEADING_CONFIG = [
-  { size: '137%', bold: true,  fontFamily: '"Songti SC", "Source Han Serif SC", "Noto Serif CJK SC", "SimSun", serif' },  // H1: 公文标题 — 小标宋/宋体粗体，二号 22pt (22/16=137%)
+  { size: '137%', bold: true,  fontFamily: '"Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "SimSun", serif' },  // H1: 公文标题 — 思源宋体/宋体粗体，二号 22pt (22/16=137%)
   { size: '100%', bold: false, fontFamily: 'SimHei, "Heiti SC", "Microsoft YaHei", sans-serif' },        // H2: 一级标题 — 黑体，三号 16pt
   { size: '100%', bold: false, fontFamily: 'KaiTi, STKaiti, "KaiTi_GB2312", serif' },                    // H3: 二级标题 — 楷体，三号 16pt
   { size: '100%', bold: true,  fontFamily: 'FangSong, STFangsong, "FangSong_GB2312", serif' },           // H4: 三级标题 — 仿宋加粗，三号 16pt
