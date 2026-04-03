@@ -1,353 +1,124 @@
-# Contributing to Markdown Inline Editor
+# 贡献指南
 
-Thank you for your interest in contributing! This guide covers the workflow and conventions specific to this project.
+开发环境搭建见 [README](README.md#getting-started-developers)。
 
-**Quick Start:** See the [README](README.md#getting-started-developers) for setup instructions.
+## 开发流程
 
-## Development Workflow
+### 1. 建分支
 
-### 1. Create a Feature Branch
-
-Always work on a feature branch, never directly on `main`:
+在特性分支上工作，不要直接往 `main` 上提交：
 
 ```bash
 git checkout -b feat/my-feature
-# or
 git checkout -b fix/bug-description
 ```
 
-**Branch naming conventions:**
-- `feat/` - New features
-- `fix/` - Bug fixes
-- `perf/` - Performance improvements
-- `docs/` - Documentation updates
-- `refactor/` - Code refactoring
-- `test/` - Test additions/updates
+分支前缀：`feat/`（新功能）、`fix/`（Bug 修复）、`perf/`（性能）、`docs/`（文档）、`refactor/`（重构）、`test/`（测试）。
 
-### 2. Make Your Changes
+### 2. 改代码
 
-- **Edit only files in `src/`** - Never modify `dist/` directly
-- **Follow TypeScript strict mode** - Use interfaces/unions, avoid `any`
-- **Add JSDoc comments** for public methods and complex logic
-- **Write tests** for new functionality (see Testing section below)
+- 只动 `src/` 下的文件，`dist/` 是构建产物，不要碰
+- TypeScript 严格模式，用接口和联合类型，别用 `any`
+- 公共方法加 JSDoc 注释
+- 新功能必须写测试
 
-### 3. Code Style Guidelines
+### 3. 代码风格
 
-**Naming Conventions:**
-- **Classes**: PascalCase (`MarkdownParser`, `Decorator`)
-- **Functions/Methods**: camelCase (`extractDecorations`, `updateDecorations`)
-- **Test files**: kebab-case (`parser-bold.test.ts`, `parser-edge-cases.test.ts`)
-- **Constants**: UPPER_SNAKE_CASE or camelCase depending on context
+命名规则：
+- 类：`PascalCase`（`MarkdownParser`）
+- 函数：`camelCase`（`extractDecorations`）
+- 测试文件：`kebab-case`（`parser-bold.test.ts`）
+- 常量：`UPPER_SNAKE_CASE` 或 `camelCase`，看场景
 
-**TypeScript Best Practices:**
-- Use interfaces for object shapes
-- Prefer union types over `any`
-- Add type annotations for function parameters and return types
-- Use optional chaining (`?.`) and nullish coalescing (`??`) where appropriate
+TypeScript 要点：用接口定义对象结构，联合类型代替 `any`，参数和返回值加类型注解，善用 `?.` 和 `??`。
 
-**Example:**
-```typescript
-/**
- * Extracts decoration ranges from markdown text.
- * 
- * @param {string} text - The markdown text to parse
- * @returns {DecorationRange[]} Array of decoration ranges, sorted by startPos
- */
-extractDecorations(text: string): DecorationRange[] {
-  // Implementation
-}
-```
+### 4. 测试
 
-### 4. Testing
-
-**All changes must include tests.** The project uses Jest for testing with **438+ passing tests** across 33 test suites.
-
-**Run tests:**
-```bash
-npm test              # Run all tests
-npm run test:watch    # Watch mode for development
-npm run test:coverage # Generate coverage report
-```
-
-**Test file locations:**
-- Parser tests: `src/parser/__tests__/`
-- Parse cache tests: `src/markdown-parse-cache/__tests__/`
-- Diff context tests: `src/diff-context/__tests__/`
-- Link target tests: `src/link-targets/__tests__/`
-- Link provider tests: `src/link-provider/__tests__/`
-- Image hover provider tests: `src/image-hover-provider/__tests__/`
-- Link hover provider tests: `src/link-hover-provider/__tests__/`
-- Link click handler tests: `src/link-click-handler/__tests__/`
-
-Follow existing test patterns and naming conventions (kebab-case for test files).
-
-**Test requirements:**
-- ✅ All existing tests must pass
-- ✅ New features need test coverage
-- ✅ Edge cases should be tested
-- ✅ Performance-critical paths should have benchmarks
-- ✅ Provider classes should test ESM module loading (use `MarkdownParser.create()` in tests)
-
-**Example test structure:**
-```typescript
-describe('MarkdownParser', () => {
-  describe('extractDecorations', () => {
-    it('should parse bold text', async () => {
-      const parser = await MarkdownParser.create();
-      const decorations = parser.extractDecorations('**bold**');
-      // Assertions
-    });
-  });
-});
-```
-
-**E2E tests** run the extension inside a real editor instance and cover activation, decoration rendering, providers, and Mermaid diagram processing.
+项目用 Jest，目前 33 个测试套件、438+ 个用例。所有改动必须带测试。
 
 ```bash
-npm run test:e2e         # Run e2e tests in VS Code (auto-downloaded)
-npm run test:e2e:cursor  # Run e2e tests in your local Cursor install
+npm test              # 跑全部测试
+npm run test:watch    # 监视模式
+npm run test:coverage # 覆盖率报告
 ```
 
-The Cursor variant requires Cursor to be installed. It auto-detects the default install path per platform, or you can override it:
+测试文件放在各模块的 `__tests__/` 目录下，命名用 kebab-case。
+
+端到端测试在真实编辑器里跑：
 
 ```bash
-CURSOR_EXECUTABLE_PATH=/custom/path/Cursor npm run test:e2e:cursor
+npm run test:e2e         # VS Code（自动下载）
+npm run test:e2e:cursor  # 本地 Cursor
 ```
 
-> **Note:** Cursor e2e tests are for local development only — CI always runs against VS Code.
+> Cursor 端到端测试仅用于本地开发，CI 只跑 VS Code。
 
-### 5. Linting and Type Checking
-
-Before committing, ensure your code passes linting and type checking:
+### 5. 提交前检查
 
 ```bash
-npm run lint           # Check code style
-npm run compile        # Type check and compile
-npm run lint:docs      # Validate feature file outlines (if editing docs/features/)
+npm run validate
 ```
 
-**Fix linting issues:**
-- Most issues can be auto-fixed with your editor's ESLint integration
-- Follow the project's ESLint configuration
+这条命令依次执行：文档结构验证 → 全部测试 → 编译打包。通不过就别提交。
 
-**Feature File Validation:**
-If you're editing files in `docs/features/`, you must ensure they follow the correct outline structure:
-- YAML frontmatter with `status`, `updateDate`, and `priority`
-- H1 title
-- Required H2 sections in order: Overview, Implementation, Acceptance Criteria, Notes, Examples
-- Run `npm run lint:docs` to validate all feature files
+### 6. 写提交信息
 
-### 6. Commit Your Changes
-
-**Use Conventional Commits** format for all commit messages:
+用 Conventional Commits 格式：
 
 ```
 <type>(<scope>): <description>
-
-[optional body]
-
-[optional footer]
 ```
 
-**Commit Types:**
-- `feat` - New feature
-- `fix` - Bug fix
-- `docs` - Documentation changes
-- `style` - Code style changes (formatting, etc.)
-- `refactor` - Code refactoring
-- `perf` - Performance improvements
-- `test` - Test additions or changes
-- `chore` - Build process or auxiliary tool changes
+type 取值：`feat`（新功能）、`fix`（Bug 修复）、`docs`（文档）、`style`（格式）、`refactor`（重构）、`perf`（性能）、`test`（测试）、`chore`（杂务）。
 
-**Examples:**
+scope 常用值：`parser`、`decorator`、`extension`、`docs`、`export`。
+
 ```bash
 git commit -m "feat(parser): add support for definition lists"
 git commit -m "fix(decorator): cache decorations on selection change"
-git commit -m "perf(parser): optimize ancestor chain building"
-git commit -m "docs: update performance improvements roadmap"
-git commit -m "test(parser): add edge case tests for nested formatting"
 ```
 
-**Scope** (optional but recommended):
-- `parser` - Changes to markdown parsing
-- `decorator` - Changes to decoration management
-- `extension` - Changes to extension activation/entry point
-- `docs` - Documentation updates
+### 7. 性能
 
-### 7. Performance Considerations
+三条红线：
+- 选区变化必须即时响应（用缓存，不重新解析）
+- 快速打字时不能卡顿
+- 1MB 以上的文件仍可用
 
-This extension prioritizes performance, especially for:
-- **Selection changes** - Should be instant (uses cached decorations)
-- **Document edits** - Should feel responsive during rapid typing
-- **Large documents** - Should remain usable (files over 1MB may experience slower parsing)
+别在选区变化时解析整个文档。用 Map 和 Set，少做字符串拼接，能批处理就批处理。
 
-**Before submitting performance-related changes:**
-- Ensure no performance regressions
-- Consider adding benchmarks for significant changes
+### 8. 发 PR
 
-**Key performance principles:**
-- Never parse the whole document on selection change (use cache)
-- Use efficient data structures (Maps, Sets)
-- Avoid unnecessary string allocations
-- Batch operations where possible
-
-### 8. Pull Request Process
-
-1. **Push your branch:**
-   ```bash
-   git push origin feat/my-feature
-   ```
-
-2. **Create a Pull Request** on GitHub:
-   - Provide a clear title and description
-   - Reference any related issues (e.g., "Fixes #123")
-   - Include screenshots/GIFs for UI changes if applicable
-
-3. **PR Requirements:**
-   - ✅ All tests pass (`npm test`)
-   - ✅ Code compiles without errors (`npm run compile`)
-   - ✅ Linting passes (`npm run lint`)
-   - ✅ Feature file validation passes (`npm run lint:docs`) - if editing `docs/features/`
-   - ✅ No performance regressions
-   - ✅ Documentation updated if needed
-   - ✅ Follows Conventional Commits
-
-4. **Code Review:**
-   - Address review feedback promptly
-   - Keep PRs focused and reasonably sized
-   - Respond to comments and questions
-
-5. **After Approval:**
-   - Maintainers will merge your PR
-   - Your contribution will be included in the next release!
-
-## Common Development Tasks
-
-### Adding a New Markdown Feature
-
-1. **Update the parser** (`src/parser.ts`):
-   - Add a new case in `processAST()` switch statement
-   - Implement the processing method (e.g., `processDefinitionList()`)
-   - Extract decoration ranges
-
-2. **Add decoration type** (`src/decorations.ts`):
-   - Create a new decoration type factory if needed
-   - Register it in `decorator/decoration-type-registry.ts`
-
-3. **Write tests** (in appropriate `*/__tests__/` directory):
-   - Create or update test file in the relevant test directory
-   - Test various edge cases
-   - For providers using `MarkdownParser`, use `MarkdownParser.create()` and replace the parser after instantiation
-
-4. **Update documentation:**
-   - Update README.md if it's a user-facing feature
-   - Update AGENTS.md if it affects architecture
-   - If editing feature files in `docs/features/`, ensure they pass validation (`npm run lint:docs`)
-
-### Debugging
-
-**Enable debug logging:**
-- Check `View → Output → Extension Host` for extension logs
-- Use `console.log()` sparingly (remove before committing)
-
-**Common issues:**
-- **Decorations not showing**: Check if file is `.md`
-- **Extension not activating**: Check activation events in `package.json`
-- **Performance issues**: Profile with VS Code's built-in tools
-
-## Documentation
-
-When contributing, please update relevant documentation:
-
-- **README.md** - User-facing features, installation, usage
-- **AGENTS.md** - Architecture and development guidelines
-- **CONTRIBUTING.md** - This file (if workflow changes)
-- **FAQ.md** - Common issues and solutions (if user-facing changes)
-- **Code comments** - JSDoc for public APIs
-
-### Feature File Structure
-
-Files in `docs/features/` must follow a specific outline structure. The validation script (`npm run lint:docs`) enforces:
-
-1. **YAML Frontmatter** (required):
-   ```yaml
-   ---
-   status: ✅ Implemented
-   updateDate: 2024-12-19
-   priority: Core Feature
-   ---
-   ```
-
-2. **Required Sections** (in order):
-   - `# Title` (H1 - exactly one)
-   - `## Overview` (H2)
-   - `## Implementation` (H2)
-   - `## Acceptance Criteria` (H2 - with Gherkin scenarios)
-   - `## Notes` (H2)
-   - `## Examples` (H2)
-
-3. **Validation:**
-   - Run `npm run lint:docs` before committing changes to feature files
-   - The script validates frontmatter fields, heading structure, and section order
-   - Headings inside code blocks are automatically ignored
-
-**Example structure:**
-```markdown
----
-status: ✅ Implemented
-updateDate: 2024-12-19
-priority: Core Feature
----
-
-# Feature Name
-
-## Overview
-
-Brief description of the feature.
-
-## Implementation
-
-How the feature works.
-
-## Acceptance Criteria
-
-### Basic Functionality
-```gherkin
-Feature: Feature name
-  Scenario: Basic case
-    When I type <markdown>
-    Then the expected behavior occurs
+```bash
+git push origin feat/my-feature
 ```
 
-## Notes
+在 GitHub 上建 PR，写清楚标题和描述，关联相关 Issue（`Fixes #123`），UI 改动附截图。
 
-- Additional context
-- Requirements
+PR 过门槛：测试全过、编译无报错、lint 通过、无性能回归、文档已更新。
 
-## Examples
+## 添加新的 Markdown 特性
 
-- `markdown` → rendered output
-```
+1. **改解析器**（`src/parser.ts`）：在 `processAST()` 的 switch 里加分支，写处理方法，提取装饰范围
+2. **加装饰类型**（`src/decorations.ts`）：需要新样式就建工厂方法，在 `decoration-type-registry.ts` 注册
+3. **写测试**：在对应的 `__tests__/` 目录下建测试文件，覆盖各种边缘情况
+4. **更新文档**：面向用户的改动更新 README，架构改动更新 AGENTS.md
 
-## Getting Help
+## 文档结构
 
-- **Open an issue** for bugs or feature requests
-- **Check existing issues** before creating new ones
-- **Review README.md** for high-level architecture overview
-- **Read the code** - The codebase is well-documented
+`docs/features/` 下的文件有固定格式，`npm run lint:docs` 会检查：
 
-## Code of Conduct
+- YAML 前置元数据（`status`、`updateDate`、`priority`）
+- 有且只有一个 H1
+- H2 按顺序：Overview → Implementation → Acceptance Criteria → Notes → Examples
 
-- Be respectful and inclusive
-- Provide constructive feedback
-- Help others learn and grow
-- Focus on what's best for the project
+## 调试
 
-## Recognition
+- 日志在 View → Output → Extension Host
+- `console.log()` 调试用完记得删
+- 装饰不显示？检查文件后缀是不是 `.md`
+- 扩展没激活？查 `package.json` 里的 activationEvents
 
-Contributors will be credited in:
-- Release notes
-- GitHub contributors page
-- Project documentation (where appropriate)
+## 行为准则
 
-Thank you for contributing to Markdown Inline Editor! 🎉
+尊重他人，提供建设性反馈，关注项目本身。

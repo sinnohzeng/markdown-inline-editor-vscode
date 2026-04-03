@@ -1,9 +1,9 @@
-# Security Policy
+# 安全策略
 
-## Supported Versions
+## 支持的版本
 
-Only the **latest published version** of this extension receives security-related attention. Older releases are not supported.
+只有最新发布版本会处理安全问题，旧版本不再维护。
 
-## Reporting a Vulnerability
+## 报告安全问题
 
-Please open a **[GitHub issue](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues)** with a clear description of the concern, steps to reproduce if applicable, and any relevant context. We do not guarantee response timelines but will review legitimate reports as we are able.
+请在 [GitHub Issues](https://github.com/sinnohzeng/markdown-inline-editor-vscode/issues) 中提交，说明问题、复现步骤和相关上下文。我们会尽力及时处理。

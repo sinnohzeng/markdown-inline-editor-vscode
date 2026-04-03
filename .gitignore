@@ -137,3 +137,6 @@ examples/
 # Firecrawl files
 .firecrawl
 *.docx
+
+# 写作指南
+docs/reference/怎样写作-任仲然.md
