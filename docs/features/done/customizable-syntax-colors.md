@@ -71,3 +71,4 @@ Feature: Customizable syntax colors
 
 - Spec: `specs/002-customizable-syntax-colors/spec.md`
 - Issue: [#49](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/49)
+- Sister feature: [Font Customization](font-customization.md) — extends the same architecture with `markdownInlineEditor.fonts.*` settings for font-family, font-weight, and font-size customization

@@ -15,6 +15,7 @@ import type {
   Text,
   Table,
   TableCell,
+  Paragraph,
 } from "mdast";
 import { getRemarkProcessorSync, getRemarkProcessor } from "./parser-remark";
 import { getEmojiMap } from "./emoji-map-loader";
@@ -133,7 +134,8 @@ export type DecorationType =
   | "tableSeparatorDash"
   | "tableCell"
   | "mention"
-  | "issueReference";
+  | "issueReference"
+  | "body";
 
 /**
  * Type for the unified processor used to parse markdown text to a Root AST node.
@@ -232,6 +234,7 @@ export class MarkdownParser {
     const decorations: DecorationRange[] = [];
     const scopes: ScopeRange[] = [];
     const mermaidBlocks: MermaidBlock[] = [];
+    const bodyRanges: DecorationRange[] = [];
 
     // Process frontmatter before remark parsing to avoid conflicts with thematic break detection
     this.processFrontmatter(normalizedText, decorations, scopes);
@@ -241,7 +244,7 @@ export class MarkdownParser {
       const ast = this.processor.parse(normalizedText) as Root;
 
       // Process AST nodes and extract decorations + scopes
-      this.processAST(ast, normalizedText, decorations, scopes, mermaidBlocks);
+      this.processAST(ast, normalizedText, decorations, scopes, mermaidBlocks, bodyRanges);
 
       // Handle edge cases: empty image alt text that remark doesn't parse as Image node
       this.handleEmptyImageAlt(normalizedText, decorations);
@@ -255,8 +258,11 @@ export class MarkdownParser {
       // Ancestor checks in processors prevent most cases, but this catches edge cases
       this.filterDecorationsInCodeBlocks(decorations, scopes, normalizedText);
 
-      // Sort decorations by start position
-      decorations.sort((a, b) => a.startPos - b.startPos);
+      // Append body paragraph ranges before sorting
+      decorations.push(...bodyRanges);
+
+      // Sort decorations by start position, then by end position for same start
+      decorations.sort((a, b) => a.startPos - b.startPos || a.endPos - b.endPos);
     } catch (error) {
       // Gracefully handle parse errors
       console.error("Error parsing markdown:", error);
@@ -286,6 +292,7 @@ export class MarkdownParser {
     decorations: DecorationRange[],
     scopes: ScopeRange[],
     mermaidBlocks: MermaidBlock[],
+    bodyRanges: DecorationRange[],
   ): void {
     // Track processed blockquote positions to avoid duplicates from nested blockquotes
     const processedBlockquotePositions = new Set<number>();
@@ -442,6 +449,14 @@ export class MarkdownParser {
                 decorations,
                 scopes,
                 currentAncestors,
+              );
+              break;
+
+            case "paragraph":
+              this.processParagraph(
+                node as Paragraph,
+                text,
+                bodyRanges,
               );
               break;
           }
@@ -2075,6 +2090,28 @@ export class MarkdownParser {
     });
 
     this.addScope(scopes, start, end, "horizontalRule");
+  }
+
+  /**
+   * Processes a paragraph node to emit body text decoration ranges.
+   * These ranges are used for body font customization and are ignored
+   * when no body font settings are configured.
+   */
+  private processParagraph(
+    node: Paragraph,
+    text: string,
+    decorations: DecorationRange[],
+  ): void {
+    if (!this.hasValidPosition(node)) return;
+
+    const start = node.position!.start.offset!;
+    const end = node.position!.end.offset!;
+
+    decorations.push({
+      startPos: start,
+      endPos: end,
+      type: "body",
+    });
   }
 
   /**

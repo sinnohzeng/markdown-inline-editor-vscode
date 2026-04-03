@@ -1,29 +1,31 @@
 {
-  "name": "markdown-inline-editor-vscode",
-  "displayName": "Markdown Inline Editor",
-  "version": "1.23.0",
-  "description": "WYSIWYG inline markdown editor - hide syntax, focus on content",
+  "name": "markdown-gongwen-view",
+  "displayName": "Markdown 公文视图",
+  "version": "1.0.0",
+  "description": "以党政公文字体风格显示 Markdown 文档 — WYSIWYG inline editor with Chinese government document typography",
   "license": "MIT",
-  "author": "SeardnaSchmid",
-  "publisher": "CodeSmith",
-  "private": true,
+  "author": "sinnohzeng",
+  "publisher": "sinnohzeng",
+  "private": false,
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SeardnaSchmid/markdown-inline-editor-vscode.git"
+    "url": "https://github.com/sinnohzeng/markdown-inline-editor-vscode.git"
   },
-  "homepage": "https://github.com/SeardnaSchmid/markdown-inline-editor-vscode",
+  "homepage": "https://github.com/sinnohzeng/markdown-inline-editor-vscode",
   "bugs": {
-    "url": "https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues"
+    "url": "https://github.com/sinnohzeng/markdown-inline-editor-vscode/issues"
   },
   "keywords": [
     "markdown",
     "wysiwyg",
     "inline",
     "editor",
-    "preview",
-    "syntax",
-    "clean"
+    "公文",
+    "党政公文",
+    "chinese",
+    "typography",
+    "font"
   ],
   "engines": {
     "vscode": "^1.100.0"
@@ -48,6 +50,10 @@
         "command": "mdInline.toggleDecorations",
         "title": "Toggle Markdown Decorations",
         "icon": "$(eye)"
+      },
+      {
+        "command": "mdInline.installBundledFonts",
+        "title": "Markdown Inline Editor: Open Bundled Fonts Folder"
       }
     ],
     "menus": {
@@ -229,6 +235,146 @@
           "description": "Hex color for checkbox (unchecked and checked)",
           "format": "color",
           "markdownDescription": "Hex color for unchecked and checked checkbox symbols. Leave empty to use theme default."
+        },
+        "markdownInlineEditor.fonts.heading1.fontFamily": {
+          "type": "string",
+          "default": "",
+          "description": "CSS font-family for level-1 headings",
+          "markdownDescription": "CSS font-family for level-1 headings (e.g. `Arial, SimHei, sans-serif`). English fonts should come first for CJK mixed text. Leave empty to use editor default."
+        },
+        "markdownInlineEditor.fonts.heading1.fontWeight": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^(normal|bold|lighter|bolder|[1-9]00)$",
+          "description": "CSS font-weight for level-1 headings",
+          "markdownDescription": "CSS font-weight for level-1 headings (`normal`, `bold`, `100`–`900`). Leave empty to use extension default."
+        },
+        "markdownInlineEditor.fonts.heading1.fontSize": {
+          "type": "string",
+          "default": "",
+          "description": "CSS font-size for level-1 headings",
+          "markdownDescription": "CSS font-size for level-1 headings (e.g. `180%`, `22pt`, `1.4em`). Leave empty to use extension default."
+        },
+        "markdownInlineEditor.fonts.heading2.fontFamily": {
+          "type": "string",
+          "default": "",
+          "description": "CSS font-family for level-2 headings",
+          "markdownDescription": "CSS font-family for level-2 headings (e.g. `Arial, KaiTi, serif`). Leave empty to use editor default."
+        },
+        "markdownInlineEditor.fonts.heading2.fontWeight": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^(normal|bold|lighter|bolder|[1-9]00)$",
+          "description": "CSS font-weight for level-2 headings",
+          "markdownDescription": "CSS font-weight for level-2 headings. Leave empty to use extension default."
+        },
+        "markdownInlineEditor.fonts.heading2.fontSize": {
+          "type": "string",
+          "default": "",
+          "description": "CSS font-size for level-2 headings",
+          "markdownDescription": "CSS font-size for level-2 headings. Leave empty to use extension default."
+        },
+        "markdownInlineEditor.fonts.heading3.fontFamily": {
+          "type": "string",
+          "default": "",
+          "description": "CSS font-family for level-3 headings",
+          "markdownDescription": "CSS font-family for level-3 headings (e.g. `\"Times New Roman\", FangSong, serif`). Leave empty to use editor default."
+        },
+        "markdownInlineEditor.fonts.heading3.fontWeight": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^(normal|bold|lighter|bolder|[1-9]00)$",
+          "description": "CSS font-weight for level-3 headings",
+          "markdownDescription": "CSS font-weight for level-3 headings. Leave empty to use extension default."
+        },
+        "markdownInlineEditor.fonts.heading3.fontSize": {
+          "type": "string",
+          "default": "",
+          "description": "CSS font-size for level-3 headings",
+          "markdownDescription": "CSS font-size for level-3 headings. Leave empty to use extension default."
+        },
+        "markdownInlineEditor.fonts.heading4.fontFamily": {
+          "type": "string",
+          "default": "",
+          "description": "CSS font-family for level-4 headings",
+          "markdownDescription": "CSS font-family for level-4 headings. Leave empty to use editor default."
+        },
+        "markdownInlineEditor.fonts.heading4.fontWeight": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^(normal|bold|lighter|bolder|[1-9]00)$",
+          "description": "CSS font-weight for level-4 headings",
+          "markdownDescription": "CSS font-weight for level-4 headings. Leave empty to use extension default."
+        },
+        "markdownInlineEditor.fonts.heading4.fontSize": {
+          "type": "string",
+          "default": "",
+          "description": "CSS font-size for level-4 headings",
+          "markdownDescription": "CSS font-size for level-4 headings. Leave empty to use extension default."
+        },
+        "markdownInlineEditor.fonts.heading5.fontFamily": {
+          "type": "string",
+          "default": "",
+          "description": "CSS font-family for level-5 headings",
+          "markdownDescription": "CSS font-family for level-5 headings. Leave empty to use editor default."
+        },
+        "markdownInlineEditor.fonts.heading5.fontWeight": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^(normal|bold|lighter|bolder|[1-9]00)$",
+          "description": "CSS font-weight for level-5 headings",
+          "markdownDescription": "CSS font-weight for level-5 headings. Leave empty to use extension default."
+        },
+        "markdownInlineEditor.fonts.heading5.fontSize": {
+          "type": "string",
+          "default": "",
+          "description": "CSS font-size for level-5 headings",
+          "markdownDescription": "CSS font-size for level-5 headings. Leave empty to use extension default."
+        },
+        "markdownInlineEditor.fonts.heading6.fontFamily": {
+          "type": "string",
+          "default": "",
+          "description": "CSS font-family for level-6 headings",
+          "markdownDescription": "CSS font-family for level-6 headings. Leave empty to use editor default."
+        },
+        "markdownInlineEditor.fonts.heading6.fontWeight": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^(normal|bold|lighter|bolder|[1-9]00)$",
+          "description": "CSS font-weight for level-6 headings",
+          "markdownDescription": "CSS font-weight for level-6 headings. Leave empty to use extension default."
+        },
+        "markdownInlineEditor.fonts.heading6.fontSize": {
+          "type": "string",
+          "default": "",
+          "description": "CSS font-size for level-6 headings",
+          "markdownDescription": "CSS font-size for level-6 headings. Leave empty to use extension default."
+        },
+        "markdownInlineEditor.fonts.emphasis.fontFamily": {
+          "type": "string",
+          "default": "",
+          "description": "CSS font-family for bold/italic emphasis",
+          "markdownDescription": "CSS font-family for bold/italic emphasis text. Leave empty to use editor default."
+        },
+        "markdownInlineEditor.fonts.emphasis.fontWeight": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^(normal|bold|lighter|bolder|[1-9]00)$",
+          "description": "CSS font-weight override for bold emphasis",
+          "markdownDescription": "CSS font-weight override for bold emphasis (e.g. `900` for extra bold). Leave empty to use default `bold`."
+        },
+        "markdownInlineEditor.fonts.body.fontFamily": {
+          "type": "string",
+          "default": "",
+          "description": "CSS font-family for body/paragraph text",
+          "markdownDescription": "CSS font-family for body/paragraph text (e.g. `\"Times New Roman\", \"Source Han Serif SC\", serif`). Fonts must be installed on your system. Leave empty to use editor default."
+        },
+        "markdownInlineEditor.fonts.body.fontWeight": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^(normal|bold|lighter|bolder|[1-9]00)$",
+          "description": "CSS font-weight for body/paragraph text",
+          "markdownDescription": "CSS font-weight for body/paragraph text (e.g. `300` for light weight). Leave empty to use default."
         }
       }
     }

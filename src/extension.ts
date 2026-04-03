@@ -167,6 +167,24 @@ export function activate(context: vscode.ExtensionContext): ExtensionApi {
     }
   );
 
+  // Register command for opening bundled fonts folder
+  const installBundledFontsCommand = vscode.commands.registerCommand(
+    'mdInline.installBundledFonts',
+    async () => {
+      const fontsPath = vscode.Uri.joinPath(context.extensionUri, 'fonts');
+      try {
+        await vscode.env.openExternal(fontsPath);
+        void vscode.window.showInformationMessage(
+          'Opened the bundled fonts folder. Install the font files (e.g., Source Han Serif SC) to your operating system to use them in font settings.'
+        );
+      } catch {
+        void vscode.window.showErrorMessage(
+          `Could not open fonts folder. You can find them manually at: ${fontsPath.fsPath}`
+        );
+      }
+    }
+  );
+
   // Register command for navigating to anchor links
   const navigateToAnchorCommand = vscode.commands.registerCommand(
     'markdown-inline-editor.navigateToAnchor',
@@ -245,7 +263,7 @@ export function activate(context: vscode.ExtensionContext): ExtensionApi {
       linkClickHandler.setEnabled(singleClickEnabled);
     }
 
-    if (event.affectsConfiguration('markdownInlineEditor.colors')) {
+    if (event.affectsConfiguration('markdownInlineEditor.colors') || event.affectsConfiguration('markdownInlineEditor.fonts')) {
       decorator.recreateColorDependentTypes();
     }
 
@@ -270,6 +288,7 @@ export function activate(context: vscode.ExtensionContext): ExtensionApi {
   context.subscriptions.push(linkHoverProviderDisposable);
   context.subscriptions.push(codeBlockHoverProviderDisposable);
   context.subscriptions.push(toggleDecorationsCommand);
+  context.subscriptions.push(installBundledFontsCommand);
   context.subscriptions.push(navigateToAnchorCommand);
   context.subscriptions.push({ dispose: () => decorator.dispose() });
   context.subscriptions.push({ dispose: () => linkClickHandler.dispose() });

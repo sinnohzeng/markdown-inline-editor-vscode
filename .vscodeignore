@@ -33,6 +33,9 @@ assets/example-video.gif
 assets/example-ui.png
 assets/example-ui-selected-line.png
 
+# Bundled fonts (too large for extension package; available from GitHub repo)
+fonts/**
+
 # Build artifacts
 branding/**
 node_modules/**
