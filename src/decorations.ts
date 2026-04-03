@@ -94,28 +94,23 @@ export function CodeBlockLanguageDecorationType(opacity: number = 0.3) {
   });
 }
 
+/** Default bold font — Source Han Serif SC Bold for consistent CJK bold rendering. */
+const BOLD_DEFAULT_FONT_FAMILY = '"Source Han Serif SC", "Noto Serif SC", "Songti SC", "SimSun", serif';
+
 /**
  * Creates a decoration type for bold text styling.
- *
- * @param {string | ThemeColor | undefined} color - Optional hex or theme color; when undefined uses default (no color override)
- * @param {string | undefined} fontFamily - Optional CSS font-family override
- * @param {string | undefined} fontWeight - Optional CSS font-weight override (default: 'bold')
- * @returns {vscode.TextEditorDecorationType} A decoration type for bold text
+ * Uses Source Han Serif SC Bold by default for CJK bold rendering.
  */
 export function BoldDecorationType(color?: string | ThemeColor, fontFamily?: string, fontWeight?: string) {
   const effectiveWeight = fontWeight ?? 'bold';
+  const effectiveFont = fontFamily ?? BOLD_DEFAULT_FONT_FAMILY;
+  // fontWeight MUST go inside textDecoration hack, never as native property
   const cssParts = ['none'];
-  if (fontFamily) {
-    // When textDecoration hack is needed, fontWeight must go inside it
-    cssParts.push(`font-weight: ${effectiveWeight}`);
-    cssParts.push(`font-family: ${fontFamily}`);
-  }
-  const options: Record<string, unknown> = {};
-  if (cssParts.length > 1) {
-    options.textDecoration = cssParts.join('; ') + ';';
-  } else {
-    options.fontWeight = effectiveWeight;
-  }
+  cssParts.push(`font-weight: ${effectiveWeight}`);
+  cssParts.push(`font-family: ${effectiveFont}`);
+  const options: Record<string, unknown> = {
+    textDecoration: cssParts.join('; ') + ';',
+  };
   if (color !== undefined) {
     options.color = color;
   }
@@ -152,17 +147,14 @@ export function ItalicDecorationType(color?: string | ThemeColor, fontFamily?: s
  */
 export function BoldItalicDecorationType(color?: string | ThemeColor, fontFamily?: string, fontWeight?: string) {
   const effectiveWeight = fontWeight ?? 'bold';
+  const effectiveFont = fontFamily ?? BOLD_DEFAULT_FONT_FAMILY;
   const cssParts = ['none'];
-  if (fontFamily) {
-    cssParts.push(`font-weight: ${effectiveWeight}`);
-    cssParts.push(`font-family: ${fontFamily}`);
-  }
-  const options: Record<string, unknown> = { fontStyle: 'italic' };
-  if (cssParts.length > 1) {
-    options.textDecoration = cssParts.join('; ') + ';';
-  } else {
-    options.fontWeight = effectiveWeight;
-  }
+  cssParts.push(`font-weight: ${effectiveWeight}`);
+  cssParts.push(`font-family: ${effectiveFont}`);
+  const options: Record<string, unknown> = {
+    fontStyle: 'italic',
+    textDecoration: cssParts.join('; ') + ';',
+  };
   if (color !== undefined) {
     options.color = color;
   }
@@ -307,7 +299,7 @@ export function HeadingDecorationType() {
  * Default body text font configuration.
  * Uses Times New Roman for English, Source Han Serif SC / Noto Serif SC for Chinese.
  */
-const BODY_DEFAULT_FONT_FAMILY = '"Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "SimSun", serif';
+const BODY_DEFAULT_FONT_FAMILY = '"Source Han Serif SC", "Noto Serif SC", "Songti SC", "SimSun", serif';
 const BODY_DEFAULT_FONT_WEIGHT = 'normal';
 /**
  * Default body font size — 100% (no enlargement via decoration).
@@ -336,7 +328,7 @@ const BODY_DEFAULT_LINE_HEIGHT = '1.8';
  *   H6 = 备用
  */
 const HEADING_CONFIG = [
-  { size: '137%', bold: true,  fontFamily: '"Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "SimSun", serif' },  // H1: 公文标题 — 思源宋体/宋体粗体，二号 22pt (22/16=137%)
+  { size: '137%', bold: true,  fontFamily: '"Source Han Serif SC", "Noto Serif SC", "Songti SC", "SimSun", serif' },  // H1: 公文标题 — 思源宋体/宋体粗体，二号 22pt (22/16=137%)
   { size: '100%', bold: false, fontFamily: 'SimHei, "Heiti SC", "Microsoft YaHei", sans-serif' },        // H2: 一级标题 — 黑体，三号 16pt
   { size: '100%', bold: false, fontFamily: 'KaiTi, STKaiti, "KaiTi_GB2312", serif' },                    // H3: 二级标题 — 楷体，三号 16pt
   { size: '100%', bold: true,  fontFamily: 'FangSong, STFangsong, "FangSong_GB2312", serif' },           // H4: 三级标题 — 仿宋加粗，三号 16pt

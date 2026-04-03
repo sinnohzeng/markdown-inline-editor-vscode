@@ -58,7 +58,8 @@
   "[markdown]": {
     "editor.fontSize": 22,
     "editor.lineHeight": 1.8,
-    "editor.wordWrap": "on",
+    "editor.wordWrap": "bounded",
+    "editor.wordWrapColumn": 56,
     "editor.minimap.enabled": false,
     "editor.unicodeHighlight.ambiguousCharacters": false,
     "editor.quickSuggestions": {
@@ -78,9 +79,10 @@
 
 | 配置项 | 值 | 说明 |
 |--------|-----|------|
-| `editor.fontSize` | `22` | 对应公文三号字（16pt ≈ 22px），正文基础字号 |
-| `editor.lineHeight` | `1.8` | 参照公文 28pt 行距（28/16 ≈ 1.75） |
-| `editor.wordWrap` | `"on"` | 长段落自动折行 |
+| `editor.fontSize` | `22` | 对应公文三号字（16pt ≈ 22px） |
+| `editor.lineHeight` | `1.8` | 参照公文 28 磅行距（28/16 ≈ 1.75） |
+| `editor.wordWrap` | `"bounded"` | 取视口和列数的较小值自动折行 |
+| `editor.wordWrapColumn` | `56` | 对应公文每行 28 字（28 全角字 = 56 等宽列） |
 | `editor.minimap.enabled` | `false` | 写文章时小地图没用 |
 | `editor.unicodeHighlight.ambiguousCharacters` | `false` | 关闭中文标点的黄色警告 |
 | `editor.quickSuggestions` | 全部 `"off"` | 写文章时关闭自动补全弹窗 |
