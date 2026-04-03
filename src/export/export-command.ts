@@ -47,10 +47,12 @@ let _processor: { parse: (text: string) => Root } | undefined;
 
 function getProcessor(): { parse: (text: string) => Root } {
   if (!_processor) {
+    /* eslint-disable @typescript-eslint/no-var-requires -- CJS/ESM 兼容，与 parser-remark.ts 同模式 */
     const { unified } = require("unified");
     const remarkParse = require("remark-parse");
     const remarkGfm = require("remark-gfm");
     const remarkFrontmatter = require("remark-frontmatter");
+    /* eslint-enable @typescript-eslint/no-var-requires */
 
     const proc = unified()
       .use(remarkParse.default ?? remarkParse)

@@ -4,32 +4,26 @@
  * 零 VS Code API 依赖，可直接用 Jest 单元测试。
  * 每个节点处理器独立 try/catch —— 单节点失败只插入诊断文字，不中断整体导出。
  */
-import type { Root, Content, Heading, Paragraph as MdParagraph, Table as MdTable, List, ListItem, Blockquote, Code, Image, Link, Text, Strong, Emphasis, InlineCode, ThematicBreak, Delete, TableRow as MdTableRow, TableCell as MdTableCell, PhrasingContent, BlockContent } from "mdast";
+import type { Root, Content, Heading, Paragraph as MdParagraph, Table as MdTable, List, ListItem, Blockquote, Code, Image, Link, Text, Strong, Emphasis, InlineCode, Delete, TableRow as MdTableRow, TableCell as MdTableCell, PhrasingContent } from "mdast";
 import {
   AlignmentType,
   BorderStyle,
   Document,
-  Footer,
-  HeadingLevel,
   ImageRun,
   LineRuleType,
   Packer,
-  PageBreak,
   Paragraph,
   ShadingType,
-  SimpleField,
   Table,
   TableCell,
   TableRow,
   TextRun,
   WidthType,
-  type FileChild,
-  type IParagraphOptions,
 } from "docx";
 import type { ResolvedImage } from "./image-resolver";
 import {
   FONT_SIZE_HALF_PT,
-  XiaoBiaoSong, HeiTi, KaiTi, FangSong, SongTi, CodeFont,
+  XiaoBiaoSong, HeiTi, KaiTi, FangSong, CodeFont,
   FIRST_LINE_INDENT_TWIP,
   LINE_SPACING_TWIP,
   TABLE as TABLE_CONST,
@@ -163,7 +157,7 @@ function convertNodes(
           }
           break;
       }
-    } catch (err) {
+    } catch {
       // 错误边界：插入诊断文字
       result.push(
         new Paragraph({

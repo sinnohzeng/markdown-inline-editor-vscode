@@ -8,7 +8,6 @@ import {
   AlignmentType,
   convertMillimetersToTwip,
   Footer,
-  Header,
   LineRuleType,
   PageOrientation,
   Paragraph,
