@@ -19,11 +19,11 @@ const path = require('path');
 const FEATURES_DIR = path.join(__dirname, '..', 'docs', 'features');
 const REQUIRED_SECTIONS = [
   { level: 1, title: null }, // H1 title (any title)
-  { level: 2, title: 'Overview' },
-  { level: 2, title: 'Implementation' },
-  { level: 2, title: 'Acceptance Criteria' },
-  { level: 2, title: 'Notes' },
-  { level: 2, title: 'Examples' }
+  { level: 2, title: 'Overview', aliases: ['概述', '做什么'] },
+  { level: 2, title: 'Implementation', aliases: ['实现', '怎么做'] },
+  { level: 2, title: 'Acceptance Criteria', aliases: ['验收标准'] },
+  { level: 2, title: 'Notes', aliases: ['备注', '边缘情况'] },
+  { level: 2, title: 'Examples', aliases: ['示例', '示例配置', '参考'] }
 ];
 
 function extractFrontmatter(content) {
@@ -122,21 +122,32 @@ function validateFile(filePath) {
   
   const foundH2Titles = h2Headings.map(h => h.title);
   
-  // Check that all required sections exist
-  for (const requiredTitle of requiredH2Titles) {
-    if (!foundH2Titles.includes(requiredTitle)) {
-      errors.push(`Missing required section: ## ${requiredTitle}`);
+  // Build alias lookup: maps each alias/title to its canonical name
+  const requiredH2Sections = REQUIRED_SECTIONS.filter(s => s.level === 2);
+
+  function matchesRequired(foundTitle, requiredSection) {
+    if (foundTitle === requiredSection.title) return true;
+    if (requiredSection.aliases && requiredSection.aliases.includes(foundTitle)) return true;
+    return false;
+  }
+
+  // Check that all required sections exist (accepting aliases)
+  for (const section of requiredH2Sections) {
+    const found = foundH2Titles.some(t => matchesRequired(t, section));
+    if (!found) {
+      const accepted = [section.title, ...(section.aliases || [])].join(' / ');
+      errors.push(`Missing required section: ## ${accepted}`);
     }
   }
-  
+
   // Check order of H2 sections (only check if all sections exist)
   if (errors.length === 0 || errors.every(e => !e.includes('Missing required section'))) {
     let lastFoundIndex = -1;
-    for (const requiredTitle of requiredH2Titles) {
-      const foundIndex = foundH2Titles.indexOf(requiredTitle);
+    for (const section of requiredH2Sections) {
+      const foundIndex = foundH2Titles.findIndex(t => matchesRequired(t, section));
       if (foundIndex !== -1) {
         if (foundIndex < lastFoundIndex) {
-          errors.push(`Section "## ${requiredTitle}" appears out of order`);
+          errors.push(`Section "## ${section.title}" appears out of order`);
         }
         lastFoundIndex = foundIndex;
       }
