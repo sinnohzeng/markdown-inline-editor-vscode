@@ -310,7 +310,16 @@ npx ovsx publish markdown-gongwen-1.0.0.vsix -p <Open-VSX-Token>
 2. 确保 `.vscodeignore` 排除了 `src/`、`node_modules/`、`fonts/`、测试文件等
 3. 使用 esbuild 或 webpack 打包，减小产物体积
 
-### 8.5 密钥泄露检测被阻止
+### 8.5 临时文件 / 工具缓存被打包进 VSIX
+
+**原因** ：项目根目录下的临时目录（如 `.firecrawl/`、`.remember/`、`.cursor/` 等）未在 `.vscodeignore` 中排除。
+
+**解决** ：
+1. 运行 `vsce ls --tree` 检查实际打包的文件列表
+2. 在 `.vscodeignore` 中添加对应目录（如 `.firecrawl/**`、`.remember/**`）
+3. 重新打包并确认文件数量和体积是否合理
+
+### 8.6 密钥泄露检测被阻止
 
 **原因** ：`vsce` 3.x 自动扫描并拦截了可能的密钥泄露。
 
