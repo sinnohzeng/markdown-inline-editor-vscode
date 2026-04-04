@@ -71,7 +71,7 @@ export interface FontSpec {
 //   衬线组：  仿宋 + Times New Roman、宋体 + Times New Roman
 //   标题体：  方正小标宋 + Times New Roman
 
-/** 方正小标宋简体 — 公文标题专用（GB/T 9704 标准指定） */
+/** 方正小标宋简体 — 公文标题专用（GB/T 9704 标准指定，未安装时 Word 自动回退到宋体） */
 export const XiaoBiaoSong: FontSpec = { eastAsia: "FZXiaoBiaoSong-B05S", ascii: "Times New Roman", hAnsi: "Times New Roman" };
 
 /** 黑体 SimHei + Arial — 一级标题、表头 */

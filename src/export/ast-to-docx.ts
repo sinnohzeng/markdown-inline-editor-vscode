@@ -289,18 +289,10 @@ function convertTable(node: MdTable, images: Map<string, ResolvedImage>): Table 
               }),
             ],
             borders: {
-              top: {
-                style: BorderStyle.SINGLE,
-                size: rowIdx === 0 ? TABLE_CONST.OUTER_BORDER_SIZE : TABLE_CONST.INNER_BORDER_SIZE,
-                color: TABLE_CONST.BORDER_COLOR,
-              },
-              bottom: {
-                style: BorderStyle.SINGLE,
-                size: rowIdx === rows.length - 1 ? TABLE_CONST.OUTER_BORDER_SIZE : TABLE_CONST.INNER_BORDER_SIZE,
-                color: TABLE_CONST.BORDER_COLOR,
-              },
-              left: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
-              right: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+              top:    { style: BorderStyle.SINGLE, size: TABLE_CONST.INNER_BORDER_SIZE, color: TABLE_CONST.BORDER_COLOR },
+              bottom: { style: BorderStyle.SINGLE, size: TABLE_CONST.INNER_BORDER_SIZE, color: TABLE_CONST.BORDER_COLOR },
+              left:   { style: BorderStyle.SINGLE, size: TABLE_CONST.INNER_BORDER_SIZE, color: TABLE_CONST.BORDER_COLOR },
+              right:  { style: BorderStyle.SINGLE, size: TABLE_CONST.INNER_BORDER_SIZE, color: TABLE_CONST.BORDER_COLOR },
             },
           });
         }),
