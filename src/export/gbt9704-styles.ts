@@ -41,6 +41,7 @@ export function createDocumentStyles(): IStylesOptions {
   const headingParagraph = {
     spacing: headingSpacing,
     indent: { firstLine: FIRST_LINE_INDENT_TWIP },
+    keepNext: true,
   };
 
   // 标题 5/6/7 及更低级别：三号FangSong，不加粗（标准未明确规定，统一设定）
@@ -84,6 +85,7 @@ export function createDocumentStyles(): IStylesOptions {
           spacing: headingSpacing,
           alignment: AlignmentType.CENTER,
           indent: { firstLine: 0 },  // 覆盖 document 默认的首行缩进
+          keepNext: true,
         },
       },
       // ── 一级标题（Markdown H2）── HeiTi 三号

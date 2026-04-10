@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.2](https://github.com/sinnohzeng/markdown-gongwen-vscode/compare/v2.0.1..v2.0.2) - 2026-04-09
+
+### Fixed
+
+- 所有标题启用"与下段同页"（keepNext），防止标题孤悬页尾
+
+### Changed
+
+- 项目显示名称改为 Markdown Gongwen 公文，方便英文搜索
+
 ## [2.0.1](https://github.com/sinnohzeng/markdown-gongwen-vscode/compare/v2.0.0..v2.0.1) - 2026-04-04
 
 ### Fixed

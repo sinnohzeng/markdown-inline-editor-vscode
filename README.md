@@ -1,6 +1,6 @@
-# Markdown 公文
+# Markdown Gongwen 公文
 
-<img src="assets/icon.png" align="right" alt="Markdown 公文" width="120" height="120">
+<img src="assets/icon.png" align="right" alt="Markdown Gongwen 公文" width="120" height="120">
 
 在 VS Code 里编辑和导出党政公文。Markdown 所见即所得编辑，一键导出符合 GB/T 9704 的 Word 文档。
 
@@ -28,7 +28,7 @@
 
 ## 安装
 
-1. 在 VS Code 扩展市场搜索 **"Markdown 公文"**，或直接安装 `.vsix`
+1. 在 VS Code 扩展市场搜索 **"Markdown Gongwen 公文"**，或直接安装 `.vsix`
 2. 打开任意 `.md` 文件，插件自动激活
 3. 系统要求：VS Code 1.100+（也支持 Cursor）
 
